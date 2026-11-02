@@ -1,13 +1,12 @@
-// initialize
-// initialize
+// initialize map
 const DEFAULT_CENTER = [43.6923, -79.43071];
 const DEFAULT_ZOOM = 12;
 
 const map = L.map('map', {
-  zoomSnap: 0.25,           // Enables fractional zoom levels (quarter steps)
-  zoomDelta: 0.25,          // Smaller zoom jump per button click
-  wheelPxPerZoomLevel: 75, // Higher number = slower, more gradual mouse wheel scroll
-  markerZoomAnimation: true
+  zoomSnap: 0.25,
+  zoomDelta: 0.25,
+  wheelPxPerZoomLevel: 75,
+  // markerZoomAnimation: true
 }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
 const MAPBOX_STYLE = 'kevinmao1999/cmvv2pgms008n01s2a9jgctrx';
@@ -22,7 +21,8 @@ if (accessToken && accessToken.trim() !== '') {
     {
       tileSize: 512,
       zoomOffset: -1,
-      maxZoom: 18,
+      maxZoom: 16,
+      minZoom: 12,
       attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }
   ).addTo(map);
@@ -37,23 +37,24 @@ function fetchSheetData() {
     download: true,
     header: true,
     skipEmptyLines: true,
+
     transformHeader: function(header) {
-      // Clean hidden spaces or extra quotes around header names
+      // normalize headers
       return header.trim().replace(/^["']|["']$/g, '');
     },
+
     complete: function(results) {
       allRestaurants = results.data;
       
-      // 1. Render all map pins once
+      // render map pins and run starting population for sidebar
       renderMarkers(allRestaurants);
-      
-      // 2. Initial sidebar populate based on starting map view
       updateVisibleSidebar();
 
-      // 3. Listen for map pans/zooms to dynamically update the sidebar
-      map.off('moveend', updateVisibleSidebar); // Prevent duplicate listeners on refetch
+      // listen for map pans/zooms to dynamically update sidebar
+      map.off('moveend', updateVisibleSidebar);
       map.on('moveend', updateVisibleSidebar);
     },
+
     error: function(err) {
       console.error('Error fetching CSV:', err);
       document.getElementById('restaurantList').innerHTML = 
@@ -62,26 +63,28 @@ function fetchSheetData() {
   });
 }
 
+// render pins on map, given a set of locations
 function renderMarkers(locations) {
-  markersGroup.clearLayers();
+  markersGroup.clearLayers(); // clear before redrawing
 
+  // for each restaurant...
   locations.forEach((place, index) => {
+    // ...extract coordinates and convert to float
     const latLngStr = getProp(place, 'Lat, Lng') || getProp(place, 'Lat/Lng') || getProp(place, 'LatLng');
     if (!latLngStr || typeof latLngStr !== 'string') return;
-
     const coords = latLngStr.split(',').map(c => parseFloat(c.trim()));
     const lat = coords[0];
     const lng = coords[1];
-
     if (isNaN(lat) || isNaN(lng)) return;
 
+    // ...extract name, region, and type, then normalize
     const name = getProp(place, 'Name') || 'Unnamed Spot';
     const region = getProp(place, 'Region');
-    const type = getProp(place, 'Type');
-
-    const cleanType = type ? type.toString().trim().toUpperCase() : '';
     const cleanRegion = region ? region.toString().trim().toUpperCase() : '';
-
+    const type = getProp(place, 'Type');
+    const cleanType = type ? type.toString().trim().toUpperCase() : '';
+    
+    // ...select map pins
     let selectedIcon = pinBlue;
     let selectedHoverIcon = pinHoverBlue;
 
@@ -101,17 +104,18 @@ function renderMarkers(locations) {
 
     const marker = L.marker([lat, lng], { icon: selectedIcon }).addTo(markersGroup);
 
-    // 1. Attach name tooltip near cursor
+    // set up hover tooltip on markers
     marker.bindTooltip(name, {
       direction: 'top',
-      offset: [0, -12],
+      offset: [0, -2],
+      opacity: 1,
       className: 'custom-tooltip'
     });
-
-    // Determine matching sidebar card ID
+    
+    // determine matching sidebar card ID
     const cardId = `card-${name.replace(/\s+/g, '-').toLowerCase()}`;
 
-    // 2. Mouseover event: Swap icon & highlight sidebar card
+    // on hover, swap marker icon and also highlight sidebar card
     marker.on('mouseover', () => {
       marker.setIcon(selectedHoverIcon);
 
@@ -122,7 +126,7 @@ function renderMarkers(locations) {
       }
     });
 
-    // 3. Mouseout event: Restore icon & remove sidebar highlight
+    // on stop hover, restore marker icon and unhighlight sidebar car
     marker.on('mouseout', () => {
       marker.setIcon(selectedIcon);
 
@@ -132,22 +136,26 @@ function renderMarkers(locations) {
       }
     });
 
-    // Click handler
+    // onclick, open modal card for more info
     marker.on('click', () => {
       openDetailModal(place);
     });
   });
 }
 
+// render a sidebar that has info based on currently visible locations
 function renderSidebar(visibleLocations) {
+  // empty sidebar
   const listContainer = document.getElementById('restaurantList');
   listContainer.innerHTML = '';
 
+  // if there are no visible locations, show empty
   if (visibleLocations.length === 0) {
     listContainer.innerHTML = '<p class="placeholder-text">No restaurants in this map view.</p>';
     return;
   }
 
+  // if there are visible locations, for each, grab properties and generate a card
   visibleLocations.forEach((place, index) => {
     const name = getProp(place, 'Name');
     const region = getProp(place, 'Region');
@@ -160,18 +168,19 @@ function renderSidebar(visibleLocations) {
     const isFav = favourite && favourite.toLowerCase().trim() === 'yes';
     const favBadge = isFav ? ' ⭐' : '';
 
-    // Generate a unique ID string per spot based on name or array position
+    // generate a unique ID string per spot based on name or array position
     const cardId = `card-${name ? name.replace(/\s+/g, '-').toLowerCase() : index}`;
 
     const card = document.createElement('div');
     card.className = 'restaurant-card';
-    card.setAttribute('data-card-id', cardId); // Set matching ID attribute
+    card.setAttribute('data-card-id', cardId); // set matching ID attribute
     card.innerHTML = `
       <h3>${name || 'Unnamed Spot'}${favBadge}</h3>
       <p><strong>${cuisine || 'Food'}</strong> ${region ? '• ' + region : ''}</p>
       <p style="color: #888; font-size: 0.8rem; margin-top: 2px;">${getProp(place, 'Address') || ''}</p>
     `;
 
+    // add modal logic onclick
     card.addEventListener('click', () => {
       map.flyTo([coords[0], coords[1]], 16);
       openDetailModal(place);
@@ -181,25 +190,23 @@ function renderSidebar(visibleLocations) {
   });
 }
 
-// Update Sidebar based on current Map Viewport (excluding "ITS" types)
+// re-renders sidebar with new set of visible locations
 function updateVisibleSidebar() {
   const bounds = map.getBounds();
   
   const visibleRestaurants = allRestaurants.filter(place => {
-    // 1. Exclude if Type is "ITS"
     const type = getProp(place, 'Type');
     if (type && type.toString().trim().toUpperCase() === 'ITS') {
       return false;
     }
 
-    // 2. Check if within current map viewport
     return isRestaurantVisible(place, bounds);
   });
 
   renderSidebar(visibleRestaurants);
 }
 
-// 4. Detailed Modal View
+// opens info modal onclick
 function openDetailModal(place) {
   const modal = document.getElementById('detailModal');
   const modalBody = document.getElementById('modalBody');
@@ -296,9 +303,9 @@ const pinBlue = L.icon({
 });
 const pinHoverBlue = L.icon({
   iconUrl: 'img/pinhover_blue.png',
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-  popupAnchor: [0, -14]
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -10]
 });
 const pinRed = L.icon({
   iconUrl: 'img/pin_red.png',
@@ -308,9 +315,9 @@ const pinRed = L.icon({
 });
 const pinHoverRed = L.icon({
   iconUrl: 'img/pinhover_red.png',
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-  popupAnchor: [0, -14]
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -10]
 });
 const pinGreen = L.icon({
   iconUrl: 'img/pin_green.png',
@@ -320,9 +327,9 @@ const pinGreen = L.icon({
 });
 const pinHoverGreen = L.icon({
   iconUrl: 'img/pinhover_green.png',
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-  popupAnchor: [0, -14]
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -10]
 });
 const pinHeart = L.icon({
   iconUrl: 'img/pin_heart.png',
@@ -332,7 +339,7 @@ const pinHeart = L.icon({
 });
 const pinHoverHeart = L.icon({
   iconUrl: 'img/pinhover_heart.png',
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-  popupAnchor: [0, -14]
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -10]
 });
