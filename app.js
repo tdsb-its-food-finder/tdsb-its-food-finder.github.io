@@ -5,8 +5,7 @@ const DEFAULT_ZOOM = 12;
 const map = L.map('map', {
   zoomSnap: 0.25,
   zoomDelta: 0.25,
-  wheelPxPerZoomLevel: 75,
-  // markerZoomAnimation: true
+  wheelPxPerZoomLevel: 75
 }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
 const MAPBOX_STYLE = 'kevinmao1999/cmvv2pgms008n01s2a9jgctrx';
@@ -28,43 +27,28 @@ if (accessToken && accessToken.trim() !== '') {
   ).addTo(map);
 }
 
+// list of all restaurants and list of pins to add to map
 let allRestaurants = [];
-let currentSearchTerm = ''; // Track search input state
 const markersGroup = L.layerGroup().addTo(map);
 
+// fetch and parse CSV data before initializing everything
 function fetchSheetData() {
   Papa.parse(CSV_URL, {
     download: true,
     header: true,
     skipEmptyLines: true,
 
-    transformHeader: function(header) {
-      return header.trim().replace(/^["']|["']$/g, '').toLowerCase();
-    },
-
     complete: function(results) {
-      allRestaurants = results.data.map(row => {
-        const cleanedRow = {};
-        for (let key in row) {
-          cleanedRow[key.toLowerCase().trim()] = row[key];
-        }
-        return cleanedRow;
-      });
+      // convert rows to an object and add them to allRestaurants list
+      allRestaurants = results.data;
       
-      // Update UI on load
-      applyFilters();
+      // render initial markers on map and update sidebar
+      renderMarkers(allRestaurants);
+      updateVisibleSidebar();
 
+      // initializes listener to update sidebar on scroll
       map.off('moveend', updateVisibleSidebar);
       map.on('moveend', updateVisibleSidebar);
-
-      // Listen to search input typing
-      const searchInput = document.getElementById('searchInput');
-      if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-          currentSearchTerm = e.target.value.toLowerCase().trim();
-          applyFilters();
-        });
-      }
     },
 
     error: function(err) {
@@ -75,52 +59,48 @@ function fetchSheetData() {
   });
 }
 
-// render pins on map, given a set of locations
+// renders pins on map, given locations
 function renderMarkers(locations) {
   markersGroup.clearLayers(); // clear before redrawing
 
   // for each restaurant...
-  locations.forEach((place, index) => {
+  locations.forEach((place) => {
     // ...extract coordinates and convert to float
-    const latLngStr = getProp(place, 'Lat, Lng') || getProp(place, 'Lat/Lng') || getProp(place, 'LatLng');
-    if (!latLngStr || typeof latLngStr !== 'string') return;
+    const latLngStr = place['Lat, Lng'];
+
     const coords = latLngStr.split(',').map(c => parseFloat(c.trim()));
     const lat = coords[0];
     const lng = coords[1];
-    if (isNaN(lat) || isNaN(lng)) return;
 
-    // ...extract name, region, type, and distance, then normalize
-    const name = getProp(place, 'Name') || 'Unnamed Spot';
-    const region = getProp(place, 'Region');
-    const cleanRegion = region ? region.toString().trim().toUpperCase() : '';
-    const type = getProp(place, 'Type');
-    const cleanType = type ? type.toString().trim().toUpperCase() : '';
-
-    // extract distance value as a number
-    const distanceRaw = getProp(place, 'Distance (km)') || getProp(place, 'Distance');
-    const distance = parseFloat(distanceRaw);
+    // ...extract name, region, type, and distance
+    const name = place['Name'];
+    const region = place['Region'];
+    const type = place['Type'];
+    const distance = parseFloat(place['Distance (km)']);
 
     // ...select map pins based on distance logic
+    // green (less than 4km)
+    // yellow (4km - 8km)
+    // red (8km+)
+    // blue (ITS building)
     let selectedIcon = pinGreen;
     let selectedHoverIcon = pinHoverGreen;
 
-    if (cleanType === 'ITS' || cleanRegion === 'ITS') {
+    if (type === 'ITS' || region === 'ITS') {
       selectedIcon = pinBlue;
       selectedHoverIcon = pinHoverBlue;
-    } else if (!isNaN(distance)) {
-      if (distance < 4) {
-        selectedIcon = pinGreen;
-        selectedHoverIcon = pinHoverGreen;
-      } else if (distance >= 4 && distance <= 8) {
-        selectedIcon = pinYellow;
-        selectedHoverIcon = pinHoverYellow;
-      } else {
-        // 10km+
-        selectedIcon = pinRed;
-        selectedHoverIcon = pinHoverRed;
-      }
+    } else if (distance < 4) {
+      selectedIcon = pinGreen;
+      selectedHoverIcon = pinHoverGreen;
+    } else if (distance >= 4 && distance <= 8) {
+      selectedIcon = pinYellow;
+      selectedHoverIcon = pinHoverYellow;
+    } else {
+      selectedIcon = pinRed;
+      selectedHoverIcon = pinHoverRed;
     }
 
+    // set up marker and add to group
     const marker = L.marker([lat, lng], { icon: selectedIcon }).addTo(markersGroup);
 
     // set up hover tooltip on markers
@@ -131,24 +111,19 @@ function renderMarkers(locations) {
       className: 'custom-tooltip'
     });
     
-    // determine matching sidebar card ID
-    const cardId = `card-${name.replace(/\s+/g, '-').toLowerCase()}`;
-
-    // on hover, swap marker icon and also highlight sidebar card
+    // on hover, swap marker icon and also highlight sidebar card (and unhighlight on unhover)
+    const cardId = `card-${name.replace(/\s+/g, '-').toLowerCase()}`; // generate a safe unique id
+    
     marker.on('mouseover', () => {
       marker.setIcon(selectedHoverIcon);
-
       const targetCard = document.querySelector(`[data-card-id="${cardId}"]`);
       if (targetCard) {
         targetCard.classList.add('highlighted');
         targetCard.scrollIntoView({ behavior: 'instant', block: 'nearest' });
       }
     });
-
-    // on stop hover, restore marker icon and unhighlight sidebar car
     marker.on('mouseout', () => {
       marker.setIcon(selectedIcon);
-
       const targetCard = document.querySelector(`[data-card-id="${cardId}"]`);
       if (targetCard) {
         targetCard.classList.remove('highlighted');
@@ -164,7 +139,6 @@ function renderMarkers(locations) {
 
 // render a sidebar that has info based on currently visible locations
 function renderSidebar(visibleLocations) {
-  // empty sidebar
   const listContainer = document.getElementById('restaurantList');
   listContainer.innerHTML = '';
 
@@ -176,16 +150,14 @@ function renderSidebar(visibleLocations) {
 
   // if there are visible locations, for each, grab properties and generate a card
   visibleLocations.forEach((place, index) => {
-    const name = getProp(place, 'Name');
-    const region = getProp(place, 'Region');
-    const cuisine = getProp(place, 'Cuisine');
-    const favourite = getProp(place, 'Favourite?');
+    const name = place['Name'];
+    const region = place['Region'];
+    const cuisine = place['Cuisine'];
+    const favourite = place['Favourite?'];
+    const favBadge = favourite ? ' ⭐' : '';
 
-    const latLngStr = getProp(place, 'Lat, Lng') || getProp(place, 'Lat/Lng') || getProp(place, 'LatLng');
-    const coords = latLngStr ? latLngStr.split(',').map(c => parseFloat(c.trim())) : [0, 0];
-
-    const isFav = favourite && favourite.toLowerCase().trim() === 'yes';
-    const favBadge = isFav ? ' ⭐' : '';
+    const latLngStr = place['Lat, Lng'];
+    const coords = latLngStr.split(',').map(c => parseFloat(c.trim()));
 
     // generate a unique ID string per spot based on name or array position
     const cardId = `card-${name ? name.replace(/\s+/g, '-').toLowerCase() : index}`;
@@ -209,35 +181,7 @@ function renderSidebar(visibleLocations) {
   });
 }
 
-// Check if a spot matches the active search term
-function matchesSearch(place) {
-  if (!currentSearchTerm) return true;
-
-  const name = (getProp(place, 'Name') || '').toLowerCase();
-  const cuisine = (getProp(place, 'Cuisine') || '').toLowerCase();
-  const region = (getProp(place, 'Region') || '').toLowerCase();
-  const description = (getProp(place, 'Description') || '').toLowerCase();
-  const menuHighlights = (getProp(place, 'Menu Highlights') || '').toLowerCase();
-
-  return name.includes(currentSearchTerm) ||
-         cuisine.includes(currentSearchTerm) ||
-         region.includes(currentSearchTerm) ||
-         description.includes(currentSearchTerm) ||
-         menuHighlights.includes(currentSearchTerm);
-}
-
-// Master function to handle filtering pins and sidebar
-function applyFilters() {
-  const matchingRestaurants = allRestaurants.filter(matchesSearch);
-  
-  // 1. Render map pins only for matching search items
-  renderMarkers(matchingRestaurants);
-  
-  // 2. Update visible sidebar cards based on current map view + search filter
-  updateVisibleSidebar();
-}
-
-// Replace the existing updateVisibleSidebar function with this updated version
+// re-renders sidebar with new set of visible locations
 function updateVisibleSidebar() {
   const bounds = map.getBounds();
   
@@ -247,8 +191,7 @@ function updateVisibleSidebar() {
       return false;
     }
 
-    // Must match map bounds AND search filter query
-    return isRestaurantVisible(place, bounds) && matchesSearch(place);
+    return isRestaurantVisible(place, bounds);
   });
 
   renderSidebar(visibleRestaurants);
@@ -306,10 +249,8 @@ function openDetailModal(place) {
 }
 
 // helper function to read column values safely
-// Optimized O(1) property accessor
 function getProp(obj, keyName) {
-  if (!obj || !keyName) return undefined;
-  return obj[keyName.toLowerCase().trim()];
+  return obj ? obj[keyName] : undefined;
 }
 
 // Check if restaurant coordinates fall within visible map bounds
@@ -390,53 +331,3 @@ const pinHoverBlue = L.icon({
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
-
-// Create a custom Leaflet control for the reset button
-const ResetViewControl = L.Control.extend({
-  options: {
-    position: 'bottomright' // Position at bottom right
-  },
-
-  onAdd: function (map) {
-    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control custom-map-control');
-    // Inside ResetViewControl onAdd function in app.js:
-    const button = L.DomUtil.create('a', 'reset-view-btn', container);
-
-    button.href = '#';
-    button.title = 'Reset view';
-    button.role = 'button';
-    button.setAttribute('aria-label', 'Reset view');
-
-    // SVG Refresh Icon
-    button.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-        <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 0.8A10 10 0 0 0 22 12.5"></path>
-      </svg>
-    `;
-
-    // Prevent map click and drag events from firing when clicking the button
-    L.DomEvent.disableClickPropagation(container);
-    L.DomEvent.disableScrollPropagation(container);
-
-    // On click, smooth fly back to default center and zoom
-    L.DomEvent.on(button, 'click', function (e) {
-      L.DomEvent.preventDefault(e);
-      map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM);
-
-      // 2. Scroll sidebar list back to the top
-      const sidebarList = document.getElementById('restaurantList');
-      if (sidebarList) {
-        sidebarList.scrollTo({
-          top: 0,
-          behavior: 'smooth' // Use 'instant' if you prefer no animation
-        });
-      }
-    });
-
-    return container;
-  }
-});
-
-// Add the control to the map
-map.addControl(new ResetViewControl());
