@@ -29,9 +29,9 @@ if (accessToken && accessToken.trim() !== '') {
 }
 
 let allRestaurants = [];
+let currentSearchTerm = ''; // Track search input state
 const markersGroup = L.layerGroup().addTo(map);
 
-// fetch and parse CSV data
 function fetchSheetData() {
   Papa.parse(CSV_URL, {
     download: true,
@@ -39,12 +39,10 @@ function fetchSheetData() {
     skipEmptyLines: true,
 
     transformHeader: function(header) {
-      // Clean up headers and trim whitespace once during parse
       return header.trim().replace(/^["']|["']$/g, '').toLowerCase();
     },
 
     complete: function(results) {
-      // Pre-process rows once to avoid repeating heavy string operations
       allRestaurants = results.data.map(row => {
         const cleanedRow = {};
         for (let key in row) {
@@ -53,11 +51,20 @@ function fetchSheetData() {
         return cleanedRow;
       });
       
-      renderMarkers(allRestaurants);
-      updateVisibleSidebar();
+      // Update UI on load
+      applyFilters();
 
       map.off('moveend', updateVisibleSidebar);
       map.on('moveend', updateVisibleSidebar);
+
+      // Listen to search input typing
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          currentSearchTerm = e.target.value.toLowerCase().trim();
+          applyFilters();
+        });
+      }
     },
 
     error: function(err) {
@@ -202,7 +209,35 @@ function renderSidebar(visibleLocations) {
   });
 }
 
-// re-renders sidebar with new set of visible locations
+// Check if a spot matches the active search term
+function matchesSearch(place) {
+  if (!currentSearchTerm) return true;
+
+  const name = (getProp(place, 'Name') || '').toLowerCase();
+  const cuisine = (getProp(place, 'Cuisine') || '').toLowerCase();
+  const region = (getProp(place, 'Region') || '').toLowerCase();
+  const description = (getProp(place, 'Description') || '').toLowerCase();
+  const menuHighlights = (getProp(place, 'Menu Highlights') || '').toLowerCase();
+
+  return name.includes(currentSearchTerm) ||
+         cuisine.includes(currentSearchTerm) ||
+         region.includes(currentSearchTerm) ||
+         description.includes(currentSearchTerm) ||
+         menuHighlights.includes(currentSearchTerm);
+}
+
+// Master function to handle filtering pins and sidebar
+function applyFilters() {
+  const matchingRestaurants = allRestaurants.filter(matchesSearch);
+  
+  // 1. Render map pins only for matching search items
+  renderMarkers(matchingRestaurants);
+  
+  // 2. Update visible sidebar cards based on current map view + search filter
+  updateVisibleSidebar();
+}
+
+// Replace the existing updateVisibleSidebar function with this updated version
 function updateVisibleSidebar() {
   const bounds = map.getBounds();
   
@@ -212,7 +247,8 @@ function updateVisibleSidebar() {
       return false;
     }
 
-    return isRestaurantVisible(place, bounds);
+    // Must match map bounds AND search filter query
+    return isRestaurantVisible(place, bounds) && matchesSearch(place);
   });
 
   renderSidebar(visibleRestaurants);
@@ -354,3 +390,53 @@ const pinHoverBlue = L.icon({
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
+
+// Create a custom Leaflet control for the reset button
+const ResetViewControl = L.Control.extend({
+  options: {
+    position: 'bottomright' // Position at bottom right
+  },
+
+  onAdd: function (map) {
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control custom-map-control');
+    // Inside ResetViewControl onAdd function in app.js:
+    const button = L.DomUtil.create('a', 'reset-view-btn', container);
+
+    button.href = '#';
+    button.title = 'Reset view';
+    button.role = 'button';
+    button.setAttribute('aria-label', 'Reset view');
+
+    // SVG Refresh Icon
+    button.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
+        <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 0.8A10 10 0 0 0 22 12.5"></path>
+      </svg>
+    `;
+
+    // Prevent map click and drag events from firing when clicking the button
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+
+    // On click, smooth fly back to default center and zoom
+    L.DomEvent.on(button, 'click', function (e) {
+      L.DomEvent.preventDefault(e);
+      map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM);
+
+      // 2. Scroll sidebar list back to the top
+      const sidebarList = document.getElementById('restaurantList');
+      if (sidebarList) {
+        sidebarList.scrollTo({
+          top: 0,
+          behavior: 'smooth' // Use 'instant' if you prefer no animation
+        });
+      }
+    });
+
+    return container;
+  }
+});
+
+// Add the control to the map
+map.addControl(new ResetViewControl());

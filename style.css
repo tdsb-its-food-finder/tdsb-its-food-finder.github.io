@@ -184,3 +184,58 @@ body, html {
 .custom-tooltip::before {
   border-top-color: rgba(0, 0, 0, 0.85); /* Matches tooltip arrow color */
 }
+
+/* Search Container & Input Styling */
+.search-container {
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#searchInput:focus {
+  border-color: #43a745;
+  box-shadow: 0 0 0 3px rgba(67, 167, 69, 0.15);
+}
+
+/* Custom Circular Map Control */
+.custom-map-control {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.custom-map-control a.reset-view-btn {
+  background-color: #ffffff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333333;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.2s ease, transform 0.15s ease, color 0.2s ease;
+}
+
+.custom-map-control a.reset-view-btn:hover {
+  background-color: #ffffff;
+  color: #43a745;
+  transform: scale(1.05);
+}
+
+.custom-map-control a.reset-view-btn:active {
+  transform: scale(0.95);
+}
