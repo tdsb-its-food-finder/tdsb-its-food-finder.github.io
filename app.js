@@ -202,7 +202,7 @@ function renderSidebar(visibleLocations) {
     card.className = 'restaurant-card';
     card.setAttribute('data-card-id', place.cardId);
     card.innerHTML = `
-      <h3>${place.name}${place.isFav ? ' ⭐' : ''}</h3>
+      <h3>${place.name}${place.isFav ? ' 🩷' : ''}</h3>
       <p><strong>${place['Cuisine'] || 'Food'}</strong> ${place['Region'] ? '• ' + place['Region'] : ''}</p>
       <p style="color: #888; font-size: 0.8rem; margin-top: 2px;">${place['Address'] || ''}</p>
     `;
@@ -256,7 +256,7 @@ function openDetailModal(place) {
   };
 
   modalBody.innerHTML = `
-    <h2 style="margin-bottom: 4px;">${name || ''} ${isFav ? '⭐' : ''}</h2>
+    <h2 style="margin-bottom: 4px;">${name || ''} ${isFav ? '🩷' : ''}</h2>
     <p style="color: #666; margin-bottom: 12px;">
       <strong>${cuisine || ''}</strong> 
       ${type ? '• ' + type : ''} 
@@ -283,27 +283,21 @@ function openDetailModal(place) {
   modal.classList.remove('hidden');
 }
 
-// helper function to read column values safely
-function getProp(obj, keyName) {
-  return obj ? obj[keyName] : undefined;
-}
-
-// Check if restaurant coordinates fall within visible map bounds
+// check if restaurant coordinates fall within visible map bounds
 function isRestaurantVisible(place, bounds) {
   if (!place.isValidLocation) return false;
   return bounds.contains([place.lat, place.lng]);
 }
 
-// Close Modal Event Handlers
+// event handlers for closing modals
 document.getElementById('closeModalBtn').addEventListener('click', () => {
   document.getElementById('detailModal').classList.add('hidden');
 });
-
 document.getElementById('detailModal').addEventListener('click', (e) => {
   if (e.target.id === 'detailModal') {
     document.getElementById('detailModal').classList.add('hidden');
   }
 });
 
-// Run fetch on load
+// run fetch on load
 fetchSheetData();
