@@ -39,18 +39,23 @@ function fetchSheetData() {
     skipEmptyLines: true,
 
     transformHeader: function(header) {
-      // normalize headers
-      return header.trim().replace(/^["']|["']$/g, '');
+      // Clean up headers and trim whitespace once during parse
+      return header.trim().replace(/^["']|["']$/g, '').toLowerCase();
     },
 
     complete: function(results) {
-      allRestaurants = results.data;
+      // Pre-process rows once to avoid repeating heavy string operations
+      allRestaurants = results.data.map(row => {
+        const cleanedRow = {};
+        for (let key in row) {
+          cleanedRow[key.toLowerCase().trim()] = row[key];
+        }
+        return cleanedRow;
+      });
       
-      // render map pins and run starting population for sidebar
       renderMarkers(allRestaurants);
       updateVisibleSidebar();
 
-      // listen for map pans/zooms to dynamically update sidebar
       map.off('moveend', updateVisibleSidebar);
       map.on('moveend', updateVisibleSidebar);
     },
@@ -77,29 +82,36 @@ function renderMarkers(locations) {
     const lng = coords[1];
     if (isNaN(lat) || isNaN(lng)) return;
 
-    // ...extract name, region, and type, then normalize
+    // ...extract name, region, type, and distance, then normalize
     const name = getProp(place, 'Name') || 'Unnamed Spot';
     const region = getProp(place, 'Region');
     const cleanRegion = region ? region.toString().trim().toUpperCase() : '';
     const type = getProp(place, 'Type');
     const cleanType = type ? type.toString().trim().toUpperCase() : '';
-    
-    // ...select map pins
-    let selectedIcon = pinBlue;
-    let selectedHoverIcon = pinHoverBlue;
+
+    // extract distance value as a number
+    const distanceRaw = getProp(place, 'Distance (km)') || getProp(place, 'Distance');
+    const distance = parseFloat(distanceRaw);
+
+    // ...select map pins based on distance logic
+    let selectedIcon = pinGreen;
+    let selectedHoverIcon = pinHoverGreen;
 
     if (cleanType === 'ITS' || cleanRegion === 'ITS') {
-      selectedIcon = pinHeart;
-      selectedHoverIcon = pinHoverHeart;
-    } else if (cleanRegion === 'ETOBICOKE') {
-      selectedIcon = pinRed;
-      selectedHoverIcon = pinHoverRed;
-    } else if (cleanRegion === 'SCARBOROUGH') {
-      selectedIcon = pinGreen;
-      selectedHoverIcon = pinHoverGreen;
-    } else if (cleanRegion === 'NORTH YORK') {
       selectedIcon = pinBlue;
       selectedHoverIcon = pinHoverBlue;
+    } else if (!isNaN(distance)) {
+      if (distance < 4) {
+        selectedIcon = pinGreen;
+        selectedHoverIcon = pinHoverGreen;
+      } else if (distance >= 4 && distance <= 8) {
+        selectedIcon = pinYellow;
+        selectedHoverIcon = pinHoverYellow;
+      } else {
+        // 10km+
+        selectedIcon = pinRed;
+        selectedHoverIcon = pinHoverRed;
+      }
     }
 
     const marker = L.marker([lat, lng], { icon: selectedIcon }).addTo(markersGroup);
@@ -258,11 +270,10 @@ function openDetailModal(place) {
 }
 
 // helper function to read column values safely
+// Optimized O(1) property accessor
 function getProp(obj, keyName) {
-  if (!obj) return undefined;
-  const target = keyName.toLowerCase().trim();
-  const foundKey = Object.keys(obj).find(k => k.toLowerCase().trim() === target);
-  return foundKey ? obj[foundKey] : undefined;
+  if (!obj || !keyName) return undefined;
+  return obj[keyName.toLowerCase().trim()];
 }
 
 // Check if restaurant coordinates fall within visible map bounds
@@ -295,14 +306,14 @@ document.getElementById('detailModal').addEventListener('click', (e) => {
 fetchSheetData();
 
 // pins
-const pinBlue = L.icon({
-  iconUrl: 'img/pin_blue.png',
+const pinYellow = L.icon({
+  iconUrl: 'img/pin_yellow.png',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
-const pinHoverBlue = L.icon({
-  iconUrl: 'img/pinhover_blue.png',
+const pinHoverYellow = L.icon({
+  iconUrl: 'img/pinhover_yellow.png',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
@@ -331,14 +342,14 @@ const pinHoverGreen = L.icon({
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
-const pinHeart = L.icon({
-  iconUrl: 'img/pin_heart.png',
+const pinBlue = L.icon({
+  iconUrl: 'img/pin_Blue.png',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
-const pinHoverHeart = L.icon({
-  iconUrl: 'img/pinhover_heart.png',
+const pinHoverBlue = L.icon({
+  iconUrl: 'img/pinhover_Blue.png',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
