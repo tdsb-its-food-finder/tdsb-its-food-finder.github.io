@@ -1,286 +1,8 @@
-// initialize map
+const accessToken = MAPBOX_ACCESS_TOKEN;
+const MAPBOX_STYLE = 'kevinmao1999/cmvv2pgms008n01s2a9jgctrx';
 const DEFAULT_CENTER = [43.6923, -79.43071];
 const DEFAULT_ZOOM = 12;
-
-const map = L.map('map', {
-  zoomSnap: 0.25,
-  zoomDelta: 0.25,
-  wheelPxPerZoomLevel: 75
-}).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-
-const MAPBOX_STYLE = 'kevinmao1999/cmvv2pgms008n01s2a9jgctrx';
-const accessToken = MAPBOX_ACCESS_TOKEN;
-
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmdqwmsBGqKFd6BcAalcgXSxlwoJhFv8j-D9sPoqyBsKRSbwMTD5JXQBYYqmk1Qj2irHycVrzQC3ID/pub?gid=0&single=true&output=csv';
-
-// load Mapbox tiles onto Leaflet map
-if (accessToken && accessToken.trim() !== '') {
-  L.tileLayer(
-    `https://api.mapbox.com/styles/v1/${MAPBOX_STYLE}/tiles/512/{z}/{x}/{y}@2x?access_token=${accessToken}`,
-    {
-      tileSize: 512,
-      zoomOffset: -1,
-      maxZoom: 16,
-      minZoom: 12,
-      attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }
-  ).addTo(map);
-}
-
-// list of all restaurants and list of pins to add to map
-let allRestaurants = [];
-const markersGroup = L.layerGroup().addTo(map);
-
-// fetch and parse CSV data before initializing everything
-function fetchSheetData() {
-  Papa.parse(CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-
-    complete: function(results) {
-      // convert rows to an object and add them to allRestaurants list
-      allRestaurants = results.data;
-      
-      // render initial markers on map and update sidebar
-      renderMarkers(allRestaurants);
-      updateVisibleSidebar();
-
-      // initializes listener to update sidebar on scroll
-      map.off('moveend', updateVisibleSidebar);
-      map.on('moveend', updateVisibleSidebar);
-    },
-
-    error: function(err) {
-      console.error('Error fetching CSV:', err);
-      document.getElementById('restaurantList').innerHTML = 
-        '<p class="placeholder-text">Unable to load restaurant data.</p>';
-    }
-  });
-}
-
-// renders pins on map, given locations
-function renderMarkers(locations) {
-  markersGroup.clearLayers(); // clear before redrawing
-
-  // for each restaurant...
-  locations.forEach((place) => {
-    // ...extract coordinates and convert to float
-    const latLngStr = place['Lat, Lng'];
-
-    const coords = latLngStr.split(',').map(c => parseFloat(c.trim()));
-    const lat = coords[0];
-    const lng = coords[1];
-
-    // ...extract name, region, type, and distance
-    const name = place['Name'];
-    const region = place['Region'];
-    const type = place['Type'];
-    const distance = parseFloat(place['Distance (km)']);
-
-    // ...select map pins based on distance logic
-    // green (less than 4km)
-    // yellow (4km - 8km)
-    // red (8km+)
-    // blue (ITS building)
-    let selectedIcon = pinGreen;
-    let selectedHoverIcon = pinHoverGreen;
-
-    if (type === 'ITS' || region === 'ITS') {
-      selectedIcon = pinBlue;
-      selectedHoverIcon = pinHoverBlue;
-    } else if (distance < 4) {
-      selectedIcon = pinGreen;
-      selectedHoverIcon = pinHoverGreen;
-    } else if (distance >= 4 && distance <= 8) {
-      selectedIcon = pinYellow;
-      selectedHoverIcon = pinHoverYellow;
-    } else {
-      selectedIcon = pinRed;
-      selectedHoverIcon = pinHoverRed;
-    }
-
-    // set up marker and add to group
-    const marker = L.marker([lat, lng], { icon: selectedIcon }).addTo(markersGroup);
-
-    // set up hover tooltip on markers
-    marker.bindTooltip(name, {
-      direction: 'top',
-      offset: [0, -2],
-      opacity: 1,
-      className: 'custom-tooltip'
-    });
-    
-    // on hover, swap marker icon and also highlight sidebar card (and unhighlight on unhover)
-    const cardId = `card-${name.replace(/\s+/g, '-').toLowerCase()}`; // generate a safe unique id
-    
-    marker.on('mouseover', () => {
-      marker.setIcon(selectedHoverIcon);
-      const targetCard = document.querySelector(`[data-card-id="${cardId}"]`);
-      if (targetCard) {
-        targetCard.classList.add('highlighted');
-        targetCard.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-      }
-    });
-    marker.on('mouseout', () => {
-      marker.setIcon(selectedIcon);
-      const targetCard = document.querySelector(`[data-card-id="${cardId}"]`);
-      if (targetCard) {
-        targetCard.classList.remove('highlighted');
-      }
-    });
-
-    // onclick, open modal card for more info
-    marker.on('click', () => {
-      openDetailModal(place);
-    });
-  });
-}
-
-// render a sidebar that has info based on currently visible locations
-function renderSidebar(visibleLocations) {
-  const listContainer = document.getElementById('restaurantList');
-  listContainer.innerHTML = '';
-
-  // if there are no visible locations, show empty
-  if (visibleLocations.length === 0) {
-    listContainer.innerHTML = '<p class="placeholder-text">No restaurants in this map view.</p>';
-    return;
-  }
-
-  // if there are visible locations, for each, grab properties and generate a card
-  visibleLocations.forEach((place, index) => {
-    const name = place['Name'];
-    const region = place['Region'];
-    const cuisine = place['Cuisine'];
-    const favourite = place['Favourite?'];
-    const favBadge = favourite ? ' ⭐' : '';
-
-    const latLngStr = place['Lat, Lng'];
-    const coords = latLngStr.split(',').map(c => parseFloat(c.trim()));
-
-    // generate a unique ID string per spot based on name or array position
-    const cardId = `card-${name ? name.replace(/\s+/g, '-').toLowerCase() : index}`;
-
-    const card = document.createElement('div');
-    card.className = 'restaurant-card';
-    card.setAttribute('data-card-id', cardId); // set matching ID attribute
-    card.innerHTML = `
-      <h3>${name || 'Unnamed Spot'}${favBadge}</h3>
-      <p><strong>${cuisine || 'Food'}</strong> ${region ? '• ' + region : ''}</p>
-      <p style="color: #888; font-size: 0.8rem; margin-top: 2px;">${getProp(place, 'Address') || ''}</p>
-    `;
-
-    // add modal logic onclick
-    card.addEventListener('click', () => {
-      map.flyTo([coords[0], coords[1]], 16);
-      openDetailModal(place);
-    });
-
-    listContainer.appendChild(card);
-  });
-}
-
-// re-renders sidebar with new set of visible locations
-function updateVisibleSidebar() {
-  const bounds = map.getBounds();
-  
-  const visibleRestaurants = allRestaurants.filter(place => {
-    const type = getProp(place, 'Type');
-    if (type && type.toString().trim().toUpperCase() === 'ITS') {
-      return false;
-    }
-
-    return isRestaurantVisible(place, bounds);
-  });
-
-  renderSidebar(visibleRestaurants);
-}
-
-// opens info modal onclick
-function openDetailModal(place) {
-  const modal = document.getElementById('detailModal');
-  const modalBody = document.getElementById('modalBody');
-
-  const name = getProp(place, 'Name');
-  const cuisine = getProp(place, 'Cuisine');
-  const type = getProp(place, 'Type');
-  const region = getProp(place, 'Region');
-  const description = getProp(place, 'Description');
-  const address = getProp(place, 'Address');
-  const menuHighlights = getProp(place, 'Menu Highlights');
-  const favourite = getProp(place, 'Favourite?');
-
-  const isFav = favourite && favourite.toLowerCase().trim() === 'yes';
-
-  // Helper to format clean outgoing social & web links
-  const createLink = (url, label) => {
-    if (!url || url.trim() === '') return '';
-    const formattedUrl = url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`;
-    return `<a href="${formattedUrl}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px; text-decoration: none; color: #2c3e50; font-weight: bold;">${label} ↗</a>`;
-  };
-
-  modalBody.innerHTML = `
-    <h2 style="margin-bottom: 4px;">${name || ''} ${isFav ? '⭐' : ''}</h2>
-    <p style="color: #666; margin-bottom: 12px;">
-      <strong>${cuisine || ''}</strong> 
-      ${type ? '• ' + type : ''} 
-      ${region ? '• ' + region : ''}
-    </p>
-    
-    ${description ? `<p style="margin-bottom: 12px;">${description}</p>` : ''}
-    ${address ? `<p style="margin-bottom: 12px;"><strong>📍 Address:</strong> ${address}</p>` : ''}
-    ${menuHighlights ? `<p style="margin-bottom: 12px;"><strong>🍽️ Menu Highlights:</strong> ${menuHighlights}</p>` : ''}
-    
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 16px 0;" />
-    
-    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-      ${createLink(getProp(place, 'Google Maps'), 'Google Maps')}
-      ${createLink(getProp(place, 'Website'), 'Website')}
-      ${createLink(getProp(place, 'Instagram'), 'Instagram')}
-      ${createLink(getProp(place, 'Facebook'), 'Facebook')}
-      ${createLink(getProp(place, 'TikTok'), 'TikTok')}
-      ${createLink(getProp(place, 'YouTube'), 'YouTube')}
-      ${createLink(getProp(place, 'Twitter'), 'Twitter')}
-    </div>
-  `;
-
-  modal.classList.remove('hidden');
-}
-
-// helper function to read column values safely
-function getProp(obj, keyName) {
-  return obj ? obj[keyName] : undefined;
-}
-
-// Check if restaurant coordinates fall within visible map bounds
-function isRestaurantVisible(place, bounds) {
-  const latLngStr = getProp(place, 'Lat, Lng') || getProp(place, 'Lat/Lng') || getProp(place, 'LatLng');
-  if (!latLngStr || typeof latLngStr !== 'string') return false;
-
-  const coords = latLngStr.split(',').map(c => parseFloat(c.trim()));
-  const lat = coords[0];
-  const lng = coords[1];
-
-  if (isNaN(lat) || isNaN(lng)) return false;
-
-  // Leaflet bounds check
-  return bounds.contains([lat, lng]);
-}
-
-// Close Modal Event Handlers
-document.getElementById('closeModalBtn').addEventListener('click', () => {
-  document.getElementById('detailModal').classList.add('hidden');
-});
-
-document.getElementById('detailModal').addEventListener('click', (e) => {
-  if (e.target.id === 'detailModal') {
-    document.getElementById('detailModal').classList.add('hidden');
-  }
-});
-
-// Run fetch on load
-fetchSheetData();
 
 // pins
 const pinYellow = L.icon({
@@ -331,3 +53,257 @@ const pinHoverBlue = L.icon({
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
+
+// ================================================================================================================================================================
+// initialization
+// ================================================================================================================================================================
+// map initialization
+const map = L.map('map', {
+  zoomSnap: 0.25,
+  zoomDelta: 0.25,
+  wheelPxPerZoomLevel: 75
+}).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+
+// load Mapbox tiles onto Leaflet map
+if (accessToken && accessToken.trim() !== '') {
+  L.tileLayer(
+    `https://api.mapbox.com/styles/v1/${MAPBOX_STYLE}/tiles/512/{z}/{x}/{y}@2x?access_token=${accessToken}`,
+    {
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 16,
+      minZoom: 12,
+      attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }
+  ).addTo(map);
+}
+
+// global lists
+let allRestaurants = [];
+const markersGroup = L.layerGroup().addTo(map);
+
+// ================================================================================================================================================================
+// fetch and parse CSV data before initializing everything
+// ================================================================================================================================================================
+function fetchSheetData() {
+  Papa.parse(CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    worker: true,
+
+    // create objects with parsed information and add to allRestaurants list
+    complete: function(results) {
+      allRestaurants = results.data.map((place) => {
+        const name = place['Name'];
+        const latLngStr = place['Lat, Lng'] || '';
+        const coords = latLngStr.split(',').map(c => parseFloat(c.trim()));
+        const distance = parseFloat(place['Distance (km)']);
+        const type = place['Type'];
+        const region = place['Region'];
+
+        let icon = pinGreen;
+        let hoverIcon = pinHoverGreen;
+
+        if (type === 'ITS') {
+          icon = pinBlue;
+          hoverIcon = pinHoverBlue;
+        } else if (distance < 4) {
+          icon = pinGreen;
+          hoverIcon = pinHoverGreen;
+        } else if (distance >= 4 && distance <= 8) {
+          icon = pinYellow;
+          hoverIcon = pinHoverYellow;
+        } else if (distance > 8) {
+          icon = pinRed;
+          hoverIcon = pinHoverRed;
+        }
+
+        // build and return object with parsed data
+        return {
+          ...place,
+          name: name,
+          lat: coords[0],
+          lng: coords[1],
+          isValidLocation: !isNaN(coords[0]) && !isNaN(coords[1]),
+          cardId: `card-${name.replace(/\s+/g, '-').toLowerCase()}`,
+          isFav: place['Favourite?'] && place['Favourite?'].toLowerCase().trim() === 'yes',
+          icon: icon,
+          hoverIcon: hoverIcon
+        };
+      });
+
+      // render initial state
+      renderMarkers(allRestaurants);
+      updateVisibleSidebar();
+
+      map.off('moveend', updateVisibleSidebar);
+      map.on('moveend', updateVisibleSidebar);
+
+      console.log(allRestaurants);
+    }
+  });
+}
+
+// ================================================================================================================================================================
+// renders pins on map, given locations
+// ================================================================================================================================================================
+function renderMarkers(locations) {
+  markersGroup.clearLayers();
+
+  locations.forEach((place) => {
+    // initialize marker and add to group
+    const marker = L.marker([place.lat, place.lng], { icon: place.icon }).addTo(markersGroup);
+
+    // set up hover tooltip on markers
+    marker.bindTooltip(place.name, {
+      direction: 'top',
+      offset: [0, -2],
+      opacity: 1,
+      className: 'custom-tooltip'
+    });
+
+    // on hover, swap marker icon and also highlight sidebar card (and unhighlight on unhover)
+    marker.on('mouseover', () => {
+      marker.setIcon(place.hoverIcon);
+      const targetCard = document.querySelector(`[data-card-id="${place.cardId}"]`);
+      if (targetCard) {
+        targetCard.classList.add('highlighted');
+        targetCard.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+      }
+    });
+    marker.on('mouseout', () => {
+      marker.setIcon(place.icon);
+      const targetCard = document.querySelector(`[data-card-id="${place.cardId}"]`);
+      if (targetCard) targetCard.classList.remove('highlighted');
+    });
+
+    // onclick, open detail modal
+    marker.on('click', () => openDetailModal(place));
+  });
+}
+
+// ================================================================================================================================================================
+// render a sidebar that has info based on currently visible locations
+// ================================================================================================================================================================
+function renderSidebar(visibleLocations) {
+  const listContainer = document.getElementById('restaurantList');
+  listContainer.innerHTML = '';
+
+  // if no visible locations, show empty
+  if (visibleLocations.length === 0) {
+    listContainer.innerHTML = '<p class="placeholder-text">No restaurants in this map view.</p>';
+    return;
+  }
+
+  // for each visible location, create a card
+  visibleLocations.forEach((place) => {
+    const card = document.createElement('div');
+    card.className = 'restaurant-card';
+    card.setAttribute('data-card-id', place.cardId);
+    card.innerHTML = `
+      <h3>${place.name}${place.isFav ? ' ⭐' : ''}</h3>
+      <p><strong>${place['Cuisine'] || 'Food'}</strong> ${place['Region'] ? '• ' + place['Region'] : ''}</p>
+      <p style="color: #888; font-size: 0.8rem; margin-top: 2px;">${place['Address'] || ''}</p>
+    `;
+
+    // add modal logic
+    card.addEventListener('click', () => {
+      map.flyTo([place.lat, place.lng], 16);
+      openDetailModal(place);
+    });
+
+    listContainer.appendChild(card);
+  });
+}
+
+// ================================================================================================================================================================
+// re-renders sidebar with new set of visible locations
+// ================================================================================================================================================================
+function updateVisibleSidebar() {
+  const bounds = map.getBounds();
+  
+  const visibleRestaurants = allRestaurants.filter(place => {
+    const type = place['Type'];
+    if (type === 'ITS') return false;
+    return isRestaurantVisible(place, bounds);
+  });
+
+  renderSidebar(visibleRestaurants);
+}
+
+// ================================================================================================================================================================
+// opens info modal onclick
+// ================================================================================================================================================================
+function openDetailModal(place) {
+  const modal = document.getElementById('detailModal');
+  const modalBody = document.getElementById('modalBody');
+
+  const name = place['Name'];
+  const cuisine = place['Cuisine'];
+  const type = place['Type'];
+  const region = place['Region'];
+  const description = place['Description'];
+  const address = place['Address'];
+  const menuHighlights = place['Menu Highlights'];
+  const isFav = place.isFav; // already calculated during fetchSheetData
+
+  // Helper to format clean outgoing social & web links
+  const createLink = (url, label) => {
+    if (!url || url.trim() === '') return '';
+    const formattedUrl = url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`;
+    return `<a href="${formattedUrl}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px; text-decoration: none; color: #2c3e50; font-weight: bold;">${label} ↗</a>`;
+  };
+
+  modalBody.innerHTML = `
+    <h2 style="margin-bottom: 4px;">${name || ''} ${isFav ? '⭐' : ''}</h2>
+    <p style="color: #666; margin-bottom: 12px;">
+      <strong>${cuisine || ''}</strong> 
+      ${type ? '• ' + type : ''} 
+      ${region ? '• ' + region : ''}
+    </p>
+    
+    ${description ? `<p style="margin-bottom: 12px;">${description}</p>` : ''}
+    ${address ? `<p style="margin-bottom: 12px;"><strong>📍 Address:</strong> ${address}</p>` : ''}
+    ${menuHighlights ? `<p style="margin-bottom: 12px;"><strong>🍽️ Menu Highlights:</strong> ${menuHighlights}</p>` : ''}
+    
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 16px 0;" />
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      ${createLink(place['Google Maps'], 'Google Maps')}
+      ${createLink(place['Website'], 'Website')}
+      ${createLink(place['Instagram'], 'Instagram')}
+      ${createLink(place['Facebook'], 'Facebook')}
+      ${createLink(place['TikTok'], 'TikTok')}
+      ${createLink(place['YouTube'], 'YouTube')}
+      ${createLink(place['Twitter'], 'Twitter')}
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+}
+
+// helper function to read column values safely
+function getProp(obj, keyName) {
+  return obj ? obj[keyName] : undefined;
+}
+
+// Check if restaurant coordinates fall within visible map bounds
+function isRestaurantVisible(place, bounds) {
+  if (!place.isValidLocation) return false;
+  return bounds.contains([place.lat, place.lng]);
+}
+
+// Close Modal Event Handlers
+document.getElementById('closeModalBtn').addEventListener('click', () => {
+  document.getElementById('detailModal').classList.add('hidden');
+});
+
+document.getElementById('detailModal').addEventListener('click', (e) => {
+  if (e.target.id === 'detailModal') {
+    document.getElementById('detailModal').classList.add('hidden');
+  }
+});
+
+// Run fetch on load
+fetchSheetData();
