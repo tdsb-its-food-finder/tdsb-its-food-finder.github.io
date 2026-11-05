@@ -190,24 +190,23 @@ function renderSidebar(visibleLocations) {
   const listContainer = document.getElementById('restaurantList');
   listContainer.innerHTML = '';
 
-  // if no visible locations, show empty
   if (visibleLocations.length === 0) {
     listContainer.innerHTML = '<p class="placeholder-text">No restaurants in this map view.</p>';
     return;
   }
 
-  // for each visible location, create a card
   visibleLocations.forEach((place) => {
     const card = document.createElement('div');
     card.className = 'restaurant-card';
     card.setAttribute('data-card-id', place.cardId);
+
     card.innerHTML = `
-      <h3>${place.name}${place.isFav ? ' 🩷' : ''}</h3>
-      <p><strong>${place['Cuisine'] || 'Food'}</strong> ${place['Region'] ? '• ' + place['Region'] : ''}</p>
-      <p style="color: #888; font-size: 0.8rem; margin-top: 2px;">${place['Address'] || ''}</p>
+      ${place.isFav ? '<span class="fav-badge">❤️</span>' : ''}
+      <h3>${place.name}</h3>
+      <p><strong>${place['Cuisine']}</strong> </p>
+      <p style="color: #888; font-size: 0.8rem; margin-top: 2px;">${place['Location']}<br>${place['Distance (km)']} km from ${place['Region']}</p>
     `;
 
-    // add modal logic
     card.addEventListener('click', () => {
       map.flyTo([place.lat, place.lng], 16);
       openDetailModal(place);
@@ -235,43 +234,57 @@ function updateVisibleSidebar() {
 // ================================================================================================================================================================
 // opens info modal onclick
 // ================================================================================================================================================================
-function openDetailModal(place) {
+function openDetailModal(place) {  
   const modal = document.getElementById('detailModal');
   const modalBody = document.getElementById('modalBody');
 
-  const name = place['Name'];
-  const cuisine = place['Cuisine'];
-  const type = place['Type'];
-  const region = place['Region'];
-  const description = place['Description'];
-  const address = place['Address'];
-  const menuHighlights = place['Menu Highlights'];
-  const isFav = place.isFav; // already calculated during fetchSheetData
-
-  // Helper to format clean outgoing social & web links
+  // helper function to create web links
   const createLink = (url, label) => {
     if (!url || url.trim() === '') return '';
-    const formattedUrl = url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`;
-    return `<a href="${formattedUrl}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px; text-decoration: none; color: #2c3e50; font-weight: bold;">${label} ↗</a>`;
+    let icon = '';
+
+    switch (label) {
+      case "Map":
+        icon = '<i class="fa-solid fa-location-dot"></i>';
+        break;
+      case "Site":
+        icon = '<i class="fa-solid fa-link"></i>';
+        break;
+      case "Instagram":
+        icon = '<i class="fa-brands fa-instagram"></i>';
+        break;
+      case "Facebook":
+        icon = '<i class="fa-brands fa-facebook"></i>';
+        break;
+      case "TikTok":
+        icon = '<i class="fa-brands fa-tiktok"></i>';
+        break;
+      case "YouTube":
+        icon = '<i class="fa-brands fa-youtube"></i>';
+        break;
+      case "Twitter":
+        icon = '<i class="fa-brands fa-twitter"></i>';
+        break;
+      default:
+        icon = '';
+    }
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="margin-right: 10px; text-decoration: none; color: #2c3e50; font-size: 24px; font-weight: bold;">${icon}</a>`;
   };
 
   modalBody.innerHTML = `
-    <h2 style="margin-bottom: 4px;">${name || ''} ${isFav ? '🩷' : ''}</h2>
+    <h2 style="margin-bottom: 4px;">${place['Name']} ${place.isFav ? '🩷' : ''}</h2>
     <p style="color: #666; margin-bottom: 12px;">
-      <strong>${cuisine || ''}</strong> 
-      ${type ? '• ' + type : ''} 
-      ${region ? '• ' + region : ''}
+      <strong>${place['Cuisine']}</strong> • ${place['Type']} <br> ${place['Address']}<br>${place['Distance (km)']} km from ${place['Region']}
     </p>
     
-    ${description ? `<p style="margin-bottom: 12px;">${description}</p>` : ''}
-    ${address ? `<p style="margin-bottom: 12px;"><strong>📍 Address:</strong> ${address}</p>` : ''}
-    ${menuHighlights ? `<p style="margin-bottom: 12px;"><strong>🍽️ Menu Highlights:</strong> ${menuHighlights}</p>` : ''}
+    ${`<p style="margin-bottom: 12px;">${place['Description']}</p>`}
+    ${`<p style="margin-bottom: 12px;"><strong>Menu Highlights:</strong> ${place['Menu Highlights']}.</p>`}
     
     <hr style="border: 0; border-top: 1px solid #eee; margin: 16px 0;" />
     
     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-      ${createLink(place['Google Maps'], 'Google Maps')}
-      ${createLink(place['Website'], 'Website')}
+      ${createLink(place['Google Maps'], 'Map')}
+      ${createLink(place['Website'], 'Site')}
       ${createLink(place['Instagram'], 'Instagram')}
       ${createLink(place['Facebook'], 'Facebook')}
       ${createLink(place['TikTok'], 'TikTok')}

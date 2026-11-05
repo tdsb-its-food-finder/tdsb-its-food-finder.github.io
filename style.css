@@ -62,12 +62,23 @@ body, html {
 
 /* Restaurant List Item Styling */
 .restaurant-card {
-  padding: 12px 15px;
+  position: relative; /* Container context for absolute positioning */
+  padding: 12px 30px 12px 15px; /* Added right padding (30px) to make room for the heart */
   border-bottom: 1px solid #37832d71;
   border-radius: 6px;
   margin-bottom: 8px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+}
+
+/* Heart pinned to top right */
+.fav-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 1.4rem;
+  line-height: 1;
+  pointer-events: none; /* Allows card click events to pass through */
 }
 
 .restaurant-card:hover {
@@ -113,10 +124,9 @@ body, html {
 
 .modal-content {
   background-color: #ffffff;
-  padding: 24px;
+  padding: 28px;
   border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
+  width: 45%;
   position: relative;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
