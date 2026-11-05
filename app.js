@@ -42,13 +42,13 @@ const pinHoverGreen = L.icon({
   popupAnchor: [0, -10]
 });
 const pinBlue = L.icon({
-  iconUrl: 'img/pin_Blue.png',
+  iconUrl: 'img/pin_blue.png',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
 const pinHoverBlue = L.icon({
-  iconUrl: 'img/pinhover_Blue.png',
+  iconUrl: 'img/pinhover_blue.png',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
