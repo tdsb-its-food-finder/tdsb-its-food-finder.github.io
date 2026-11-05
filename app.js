@@ -178,8 +178,10 @@ function renderMarkers(locations) {
       if (targetCard) targetCard.classList.remove('highlighted');
     });
 
-    // onclick, open detail modal
-    marker.on('click', () => openDetailModal(place));
+    if (place.Type !== "ITS") {
+      // onclick, open detail modal
+      marker.on('click', () => openDetailModal(place));
+    }
   });
 }
 
