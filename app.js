@@ -17,6 +17,18 @@ const pinHoverYellow = L.icon({
   iconAnchor: [10, 10],
   popupAnchor: [0, -10]
 });
+const pinOrange = L.icon({
+  iconUrl: 'img/pin_orange.png',
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -10]
+});
+const pinHoverOrange = L.icon({
+  iconUrl: 'img/pinhover_orange.png',
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  popupAnchor: [0, -10]
+});
 const pinRed = L.icon({
   iconUrl: 'img/pin_red.png',
   iconSize: [20, 20],
@@ -108,12 +120,15 @@ function fetchSheetData() {
         if (type === 'ITS') {
           icon = pinBlue;
           hoverIcon = pinHoverBlue;
-        } else if (distance < 4) {
+        } else if (distance < 3) {
           icon = pinGreen;
           hoverIcon = pinHoverGreen;
-        } else if (distance >= 4 && distance <= 8) {
+        } else if (distance >=3 && distance <= 6) {
           icon = pinYellow;
           hoverIcon = pinHoverYellow;
+        } else if (distance >= 6 && distance <= 8) {
+          icon = pinOrange;
+          hoverIcon = pinHoverOrange;
         } else if (distance > 8) {
           icon = pinRed;
           hoverIcon = pinHoverRed;
@@ -139,8 +154,6 @@ function fetchSheetData() {
 
       map.off('moveend', updateVisibleSidebar);
       map.on('moveend', updateVisibleSidebar);
-
-      console.log(allRestaurants);
     }
   });
 }
@@ -276,7 +289,10 @@ function openDetailModal(place) {
   modalBody.innerHTML = `
     <h2 style="margin-bottom: 4px;">${place['Name']} ${place.isFav ? '🩷' : ''}</h2>
     <p style="color: #666; margin-bottom: 12px;">
-      <strong>${place['Cuisine']}</strong> • ${place['Type']} <br> ${place['Address']}<br>${place['Distance (km)']} km from ${place['Region']}
+      <strong>${place['Cuisine']}</strong> • ${place['Type']}
+      <br>
+      ${place['Distance (km)']} km from ${place['Region']}
+      <span style="display: block; margin-top: 6px;">${place['Address']}</span>
     </p>
     
     ${`<p style="margin-bottom: 12px;">${place['Description']}</p>`}
