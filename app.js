@@ -153,7 +153,7 @@ function fetchSheetData() {
       updateVisibleSidebar();
 
       map.off('moveend', updateVisibleSidebar);
-      map.on('moveend', updateVisibleSidebar);
+      map.on('moveend', () => handleSearch());
     }
   });
 }
@@ -234,10 +234,10 @@ function renderSidebar(visibleLocations) {
 // ================================================================================================================================================================
 // re-renders sidebar with new set of visible locations
 // ================================================================================================================================================================
-function updateVisibleSidebar() {
+function updateVisibleSidebar(dataToFilter = allRestaurants) {
   const bounds = map.getBounds();
-  
-  const visibleRestaurants = allRestaurants.filter(place => {
+
+  const visibleRestaurants = dataToFilter.filter((place) => {
     const type = place['Type'];
     if (type === 'ITS') return false;
     return isRestaurantVisible(place, bounds);
@@ -245,6 +245,47 @@ function updateVisibleSidebar() {
 
   renderSidebar(visibleRestaurants);
 }
+
+// ================================================================================================================================================================
+// search and filter handler
+// ================================================================================================================================================================
+// Helper to strip out all non-alphanumeric characters and normalize text
+function normalizeText(text) {
+  if (!text) return '';
+  return text.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+function handleSearch() {
+  const searchTerm = normalizeText(document.getElementById('searchInput').value);
+
+  const filteredRestaurants = allRestaurants.filter((place) => {
+    // Always keep office/ITS marker on map
+    if (place.Type === 'ITS') return true;
+
+    // Normalize target fields
+    const name = normalizeText(place['Name']);
+    const cuisine = normalizeText(place['Cuisine']);
+    const region = normalizeText(place['Region']);
+    const location = normalizeText(place['Location']);
+    const description = normalizeText(place['Description']);
+
+    return (
+      name.includes(searchTerm) ||
+      cuisine.includes(searchTerm) ||
+      region.includes(searchTerm) ||
+      location.includes(searchTerm) ||
+      description.includes(searchTerm)
+    );
+  });
+
+  // Re-render markers for matching spots
+  renderMarkers(filteredRestaurants);
+
+  // Update sidebar list for matching spots inside map view
+  updateVisibleSidebar(filteredRestaurants);
+}
+
+// Attach event listener to search input
+document.getElementById('searchInput').addEventListener('input', handleSearch);
 
 // ================================================================================================================================================================
 // opens info modal onclick
