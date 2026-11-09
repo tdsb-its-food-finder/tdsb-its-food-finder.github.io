@@ -283,11 +283,11 @@ body, html {
    Mobile Responsive Layout (Screens <= 768px)
    ========================================================================== */
 @media screen and (max-width: 768px) {
-  /* Prevent default browser pull-to-refresh behavior while dragging header */
   .sidebar-header {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+    cursor: pointer;
   }
 
   /* Smooth momentum scrolling inside restaurant list */
@@ -333,6 +333,7 @@ body, html {
     border-radius: 16px 16px 0 0;
     position: relative;
     cursor: pointer; /* Indicates it can be tapped to toggle */
+    pointer-events: none;
   }
 
   /* Drag handle indicator line */
