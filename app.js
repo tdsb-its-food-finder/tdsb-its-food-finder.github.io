@@ -97,12 +97,6 @@ const markersGroup = L.layerGroup().addTo(map);
 // ================================================================================================================================================================
 // fetch and parse CSV data before initializing everything
 // ================================================================================================================================================================
-// check if restaurant coordinates fall within visible map bounds
-function isRestaurantVisible(place, bounds) {
-  if (!place.isValidLocation) return false;
-  return bounds.contains([place.lat, place.lng]);
-}
-
 function fetchSheetData() {
   Papa.parse(CSV_URL, {
     download: true,
@@ -162,6 +156,12 @@ function fetchSheetData() {
       map.on('moveend', () => handleSearch());
     }
   });
+}
+
+// check if restaurant coordinates fall within visible map bounds
+function isRestaurantVisible(place, bounds) {
+  if (!place.isValidLocation) return false;
+  return bounds.contains([place.lat, place.lng]);
 }
 
 // ================================================================================================================================================================
