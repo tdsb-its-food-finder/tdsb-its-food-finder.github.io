@@ -283,10 +283,17 @@ body, html {
    Mobile Responsive Layout (Screens <= 768px)
    ========================================================================== */
 @media screen and (max-width: 768px) {
-  .app-container {
-    flex-direction: column-reverse; /* Stacks map on top, sidebar on bottom */
-    position: relative;
-    overflow: hidden;
+  /* Prevent default browser pull-to-refresh behavior while dragging header */
+  .sidebar-header {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Smooth momentum scrolling inside restaurant list */
+  .restaurant-list {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   /* Make map fill the entire container background */

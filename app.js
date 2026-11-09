@@ -403,16 +403,101 @@ function resetMapView() {
 // Attach event listener to reset button
 document.getElementById('resetMapBtn').addEventListener('click', resetMapView);
 
-// Toggle mobile bottom sheet when clicking header
-const sidebarHeader = document.querySelector('.sidebar-header');
+// ================================================================================================================================================================
+// Mobile Bottom Sheet Drag & Touch Gesture Controller
+// ================================================================================================================================================================
 const sidebar = document.querySelector('.sidebar');
+const sidebarHeader = document.querySelector('.sidebar-header');
 
-sidebarHeader.addEventListener('click', () => {
-  if (window.innerWidth <= 768) {
-    sidebar.classList.toggle('collapsed');
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+let initialTransform = 0;
+
+// Helper to check if mobile view is active
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
+// Get numeric Y translation value of sidebar
+function getSidebarTranslateY() {
+  const style = window.getComputedStyle(sidebar);
+  const matrix = new WebKitCSSMatrix(style.transform);
+  return matrix.m41;
+}
+
+// 1. Touch Start Handler
+sidebarHeader.addEventListener('touchstart', (e) => {
+  if (!isMobile()) return;
+  isDragging = true;
+  startY = e.touches[0].clientY;
+  
+  // Disable CSS transition during manual drag for instantaneous response
+  sidebar.style.transition = 'none';
+  
+  const collapsedOffset = sidebar.offsetHeight - 130;
+  initialTransform = sidebar.classList.contains('collapsed') ? collapsedOffset : 0;
+}, { passive: true });
+
+// 2. Touch Move Handler (Drag tracking)
+window.addEventListener('touchmove', (e) => {
+  if (!isDragging || !isMobile()) return;
+  
+  currentY = e.touches[0].clientY;
+  const deltaY = currentY - startY;
+  
+  // Calculate raw new translation (clamp between fully open 0 and collapsed max)
+  const maxCollapse = sidebar.offsetHeight - 130;
+  let newTranslateY = initialTransform + deltaY;
+  newTranslateY = Math.max(0, Math.min(newTranslateY, maxCollapse));
+
+  sidebar.style.transform = `translateY(${newTranslateY}px)`;
+}, { passive: true });
+
+// 3. Touch End Handler (Snap Logic based on drag threshold)
+window.addEventListener('touchend', () => {
+  if (!isDragging || !isMobile()) return;
+  isDragging = false;
+  
+  // Re-enable smooth transition for snapping
+  sidebar.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+  
+  const deltaY = currentY - startY;
+  const maxCollapse = sidebar.offsetHeight - 130;
+  const threshold = maxCollapse / 3; // Snap trigger distance threshold
+
+  // Clear inline style so stylesheet rules/classes take over
+  sidebar.style.transform = '';
+
+  // Determine snap state based on drag direction and distance
+  if (deltaY > threshold) {
+    sidebar.classList.add('collapsed');
+  } else if (deltaY < -threshold) {
+    sidebar.classList.remove('collapsed');
   }
+});
+
+// 4. Tap Header to Toggle (Fallback click behavior)
+sidebarHeader.addEventListener('click', (e) => {
+  if (!isMobile()) return;
+  // Ignore tap if user was dragging
+  if (Math.abs(currentY - startY) > 5) return;
+  sidebar.classList.toggle('collapsed');
 });
 
 // run fetch on load
 fetchSheetData();
 
+// Force Leaflet to recalculate dimensions once DOM and styles settle
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 200);
+});
+
+// Also invalidate size on window resize (e.g., orientation change)
+window.addEventListener('resize', () => {
+  if (window.innerWidth <= 768) {
+    map.invalidateSize();
+  }
+});
