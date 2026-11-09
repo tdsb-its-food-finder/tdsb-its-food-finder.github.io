@@ -78,7 +78,6 @@ body, html {
   right: 12px;
   font-size: 1.4rem;
   line-height: 1;
-  pointer-events: none; /* Allows card click events to pass through */
 }
 
 .restaurant-card:hover {
@@ -283,11 +282,16 @@ body, html {
    Mobile Responsive Layout (Screens <= 768px)
    ========================================================================== */
 @media screen and (max-width: 768px) {
+  /* 2. Seamless Header Stacking */
   .sidebar-header {
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
+    padding: 14px 20px;
+    border-radius: 16px 16px 0 0;
+    position: relative;
     cursor: pointer;
+    background-color: #43a745;
+    margin-bottom: -1px; /* Overlaps search bar by 1px to seal sub-pixel hairline gaps */
+    position: relative;
+    z-index: 2;
   }
 
   /* Ensure clicks/taps on child elements register on the header container */
@@ -295,8 +299,17 @@ body, html {
     pointer-events: none;
   }
 
-  /* Smooth momentum scrolling inside restaurant list */
+  /* 3. Keep rest of sidebar body white */
+  .search-container {
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+    z-index: 1;
+  }
+  
   .restaurant-list {
+    background-color: #ffffff;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
@@ -311,20 +324,22 @@ body, html {
     z-index: 1;
   }
 
-  /* Convert Sidebar into a Mobile Bottom Sheet */
+  /* 1. Prevent background bleed through rounded corner gaps */
   .sidebar {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 60vh; /* Default visible sheet height */
+    height: 60vh;
     max-height: 85vh;
     border-right: none;
-    border-top: 1px solid #e0e0e0;
+    border-top: none; /* Remove border-top line */
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
-    z-index: 1001; /* Above map elements */
+    z-index: 1001;
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    background-color: #43a745; /* Match header color to eliminate sub-pixel corner seam */
+    overflow: hidden; /* Clips internal scrolling content cleanly */
   }
 
   /* Collapsed drawer state (leaves header & search bar visible) */

@@ -414,39 +414,33 @@ let currentY = 0;
 let isDragging = false;
 let initialTransform = 0;
 
-// Helper to check if mobile view is active
 function isMobile() {
   return window.innerWidth <= 768;
-}
-
-// Get numeric Y translation value of sidebar
-function getSidebarTranslateY() {
-  const style = window.getComputedStyle(sidebar);
-  const matrix = new WebKitCSSMatrix(style.transform);
-  return matrix.m41;
 }
 
 // 1. Touch Start Handler
 sidebarHeader.addEventListener('touchstart', (e) => {
   if (!isMobile()) return;
   isDragging = true;
-  startY = e.touches[0].clientY;
   
+  // Track start and current coordinates cleanly for this touch sequence
+  startY = e.touches[0].clientY;
+  currentY = startY;
+
   // Disable CSS transition during manual drag for instantaneous response
   sidebar.style.transition = 'none';
-  
-  const collapsedOffset = sidebar.offsetHeight - 130;
-  initialTransform = sidebar.classList.contains('collapsed') ? collapsedOffset : 0;
+
+  const maxCollapse = sidebar.offsetHeight - 130;
+  initialTransform = sidebar.classList.contains('collapsed') ? maxCollapse : 0;
 }, { passive: true });
 
 // 2. Touch Move Handler (Drag tracking)
 window.addEventListener('touchmove', (e) => {
   if (!isDragging || !isMobile()) return;
-  
+
   currentY = e.touches[0].clientY;
   const deltaY = currentY - startY;
-  
-  // Calculate raw new translation (clamp between fully open 0 and collapsed max)
+
   const maxCollapse = sidebar.offsetHeight - 130;
   let newTranslateY = initialTransform + deltaY;
   newTranslateY = Math.max(0, Math.min(newTranslateY, maxCollapse));
@@ -454,22 +448,22 @@ window.addEventListener('touchmove', (e) => {
   sidebar.style.transform = `translateY(${newTranslateY}px)`;
 }, { passive: true });
 
-// 3. Touch End Handler (Snap Logic based on drag threshold)
+// 3. Touch End Handler (Snap Logic)
 window.addEventListener('touchend', () => {
   if (!isDragging || !isMobile()) return;
   isDragging = false;
-  
+
   // Re-enable smooth transition for snapping
   sidebar.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
-  
+
   const deltaY = currentY - startY;
   const maxCollapse = sidebar.offsetHeight - 130;
-  const threshold = maxCollapse / 3; // Snap trigger distance threshold
+  const threshold = maxCollapse / 3;
 
-  // Clear inline style so stylesheet rules/classes take over
+  // Clear inline style so stylesheet classes (.collapsed) control state cleanly
   sidebar.style.transform = '';
 
-  // Determine snap state based on drag direction and distance
+  // Snap to collapsed or expanded state based on drag distance
   if (deltaY > threshold) {
     sidebar.classList.add('collapsed');
   } else if (deltaY < -threshold) {
@@ -477,12 +471,19 @@ window.addEventListener('touchend', () => {
   }
 });
 
-// 4. Tap Header to Toggle (Fallback click behavior)
+// 4. Click / Tap Toggle Handler
 sidebarHeader.addEventListener('click', (e) => {
   if (!isMobile()) return;
-  // Ignore tap if user was dragging
-  if (Math.abs(currentY - startY) > 5) return;
-  sidebar.classList.toggle('collapsed');
+
+  // If drag displacement was minimal (less than 10px total movement), treat as a tap
+  if (Math.abs(currentY - startY) <= 10) {
+    sidebar.style.transform = ''; // Clear inline styles
+    sidebar.classList.toggle('collapsed');
+    
+    // Reset delta trackers after processing click
+    startY = 0;
+    currentY = 0;
+  }
 });
 
 // run fetch on load
