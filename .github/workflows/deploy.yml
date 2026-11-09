@@ -21,7 +21,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create config.js & disable Jekyll
+      - name: Inject Mapbox Secret into config.js & Disable Jekyll
         run: |
           echo "const MAPBOX_ACCESS_TOKEN = '${{ secrets.MAPBOX_ACCESS_TOKEN }}';" > config.js
           touch .nojekyll
