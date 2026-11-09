@@ -229,9 +229,14 @@ function renderSidebar(visibleLocations) {
     `;
 
     card.addEventListener('click', () => {
-      map.flyTo([place.lat, place.lng], 16);
-      openDetailModal(place);
-    });
+    map.flyTo([place.lat, place.lng], 16);
+    openDetailModal(place);
+
+    // Collapse drawer on mobile selection to reveal full map view
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.add('collapsed');
+    }
+  });
 
     listContainer.appendChild(card);
   });
@@ -398,5 +403,16 @@ function resetMapView() {
 // Attach event listener to reset button
 document.getElementById('resetMapBtn').addEventListener('click', resetMapView);
 
+// Toggle mobile bottom sheet when clicking header
+const sidebarHeader = document.querySelector('.sidebar-header');
+const sidebar = document.querySelector('.sidebar');
+
+sidebarHeader.addEventListener('click', () => {
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle('collapsed');
+  }
+});
+
 // run fetch on load
 fetchSheetData();
+

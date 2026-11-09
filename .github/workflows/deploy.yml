@@ -24,22 +24,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Create config.js FIRST before uploading artifacts
+      # 1. Inject Mapbox secret into config.js
       - name: Inject Mapbox Secret into config.js
         run: |
           echo "const MAPBOX_ACCESS_TOKEN = '${{ secrets.MAPBOX_ACCESS_TOKEN }}';" > config.js
 
-      # 2. Configure GitHub Pages (using official actions/configure-pages)
+      # 2. Configure GitHub Pages (ensures proper path resolution post-rename)
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
-      # 3. Upload all files (including the newly generated config.js)
+      # 3. Package and upload artifacts (including dynamically created config.js)
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
 
-      # 4. Publish to GitHub Pages
+      # 4. Publish site to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

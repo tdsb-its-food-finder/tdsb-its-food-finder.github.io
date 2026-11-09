@@ -278,3 +278,89 @@ body, html {
 .reset-btn:active {
   transform: scale(0.95);
 }
+
+/* ==========================================================================
+   Mobile Responsive Layout (Screens <= 768px)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+  .app-container {
+    flex-direction: column-reverse; /* Stacks map on top, sidebar on bottom */
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Make map fill the entire container background */
+  #map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  /* Convert Sidebar into a Mobile Bottom Sheet */
+  .sidebar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60vh; /* Default visible sheet height */
+    max-height: 85vh;
+    border-right: none;
+    border-top: 1px solid #e0e0e0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 1001; /* Above map elements */
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* Collapsed drawer state (leaves header & search bar visible) */
+  .sidebar.collapsed {
+    transform: translateY(calc(100% - 130px));
+  }
+
+  /* Header compact adjustments for mobile drag handle look */
+  .sidebar-header {
+    padding: 14px 20px;
+    border-radius: 16px 16px 0 0;
+    position: relative;
+    cursor: pointer; /* Indicates it can be tapped to toggle */
+  }
+
+  /* Drag handle indicator line */
+  .sidebar-header::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    margin: 0 auto 8px auto;
+  }
+
+  .sidebar-header h1 {
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  /* Hide verbose text descriptions on small screens */
+  .sidebar-header div {
+    display: none;
+  }
+
+  /* Modal width adjustments */
+  .modal-content {
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  /* Adjust floating reset button position above bottom sheet */
+  .reset-btn {
+    bottom: 140px;
+    right: 16px;
+    z-index: 1000;
+  }
+}
