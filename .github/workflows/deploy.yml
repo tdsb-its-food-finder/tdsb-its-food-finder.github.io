@@ -5,41 +5,43 @@ on:
     branches:
       - main
 
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1. Create config.js FIRST before uploading artifacts
       - name: Inject Mapbox Secret into config.js
         run: |
           echo "const MAPBOX_ACCESS_TOKEN = '${{ secrets.MAPBOX_ACCESS_TOKEN }}';" > config.js
 
-      # 2. Configure GitHub Pages (using official actions/configure-pages)
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      # 3. Upload all files (including the newly generated config.js)
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
 
-      # 4. Publish to GitHub Pages
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
