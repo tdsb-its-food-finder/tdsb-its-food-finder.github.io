@@ -25,32 +25,38 @@
     
     <!-- sidebar -->
     <aside class="sidebar">
-  <header class="sidebar-header">
-    <h1>TDSB ITS Lunch Spots</h1>
-    <div>
-      <p>This site is managed by Kevin Mao. I wanted a way to more easily pick and sort through lunch options are the office, as everyone has their own preferences. Please let me know if you find any errors or discrepancies -- I will do my best to fix them ASAP!</p>
-      <p>Feel free to join our <a style="color: white" href="https://teams.microsoft.com/l/chat/19%3A9199eb852bcd4938b22bd4ddf5a0d99d%40thread.v2/conversations?context=%7B%22contextType%22%3A%22chat%22%7D">MS Teams group chat</a> where we share what we get for lunch!</p>
-    </div>
-  </header>
+      <header class="sidebar-header">
+        <h1>TDSB ITS Lunch Spots</h1>
+        <div>
+          <p>This site is managed by Kevin Mao. I wanted a way to more easily pick and sort through lunch options are the office, as everyone has their own preferences. Please let me know if you find any errors or discrepancies -- I will do my best to fix them ASAP!</p>
+          <p>Feel free to join our <a style="color: white" href="https://teams.microsoft.com/l/chat/19%3A9199eb852bcd4938b22bd4ddf5a0d99d%40thread.v2/conversations?context=%7B%22contextType%22%3A%22chat%22%7D">MS Teams group chat</a> where we share what we get for lunch!</p>
+        </div>
+      </header>
 
-  <!-- Add search container -->
-  <div class="search-container">
-    <input
-      type="text" 
-      id="searchInput" 
-      placeholder="Search spots, cuisines, regions..." 
-      autocomplete="off"
-    />
-  </div>
+      <!-- Add search container -->
+      <div class="search-container">
+        <input
+          type="text" 
+          id="searchInput" 
+          placeholder="Search spots, cuisines, regions..." 
+          autocomplete="off"
+        />
+      </div>
 
-  <!-- section where visible restaurants will list -->
-  <div class="restaurant-list" id="restaurantList">
-    <p class="placeholder-text">Loading locations...</p>
-  </div>
-</aside>
+      <!-- section where visible restaurants will list -->
+      <div class="restaurant-list" id="restaurantList">
+        <p class="placeholder-text">Loading locations...</p>
+      </div>
+    </aside>
 
     <!-- map container -->
     <main id="map"></main>
+    
+    <!-- Floating Reset Button -->
+    <button id="resetMapBtn" class="reset-btn" title="Reset View & Search">
+      <i class="fa-solid fa-rotate-right"></i>
+    </button>
+
   </div>
 
   <!-- detail modal/drawer (hidden by default) -->

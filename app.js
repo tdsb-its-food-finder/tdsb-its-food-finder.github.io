@@ -371,5 +371,32 @@ document.getElementById('detailModal').addEventListener('click', (e) => {
   }
 });
 
+// ================================================================================================================================================================
+// reset button handler
+// ================================================================================================================================================================
+function resetMapView() {
+  // 1. Reset map zoom and position to default center
+  map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+
+  // 2. Clear search input field
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.value = '';
+  }
+
+  // 3. Re-render all markers and update sidebar list
+  renderMarkers(allRestaurants);
+  updateVisibleSidebar(allRestaurants);
+
+  // 4. Scroll sidebar list back to top
+  const listContainer = document.getElementById('restaurantList');
+  if (listContainer) {
+    listContainer.scrollTop = 0;
+  }
+}
+
+// Attach event listener to reset button
+document.getElementById('resetMapBtn').addEventListener('click', resetMapView);
+
 // run fetch on load
 fetchSheetData();

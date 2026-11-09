@@ -1,7 +1,7 @@
-# TDSB ITS Lunch Spots
+# TDSB ITS Food Spots
 This site is managed by Kevin Mao. I wanted a way to more easily pick and sort through lunch options are the office, as everyone has their own preferences.
 
-The site is hosted here: https://tdsb-its-lunches.github.io/.<br>
+The site is hosted here: https://tdsb-its-food.github.io/.<br>
 My databse with info is located [here](https://docs.google.com/spreadsheets/d/1YJcwHLQqYIkFjrm6TbKCyPNQBRf_3HtCEBXcC5ndTp4/edit?usp=sharing).
 
 The site is fairly simple, but it is split into three areas:
