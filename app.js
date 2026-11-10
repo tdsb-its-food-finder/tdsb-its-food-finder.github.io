@@ -1,7 +1,13 @@
 const accessToken = MAPBOX_ACCESS_TOKEN;
 const MAPBOX_STYLE = 'kevinmao1999/cmvv2pgms008n01s2a9jgctrx';
 const DEFAULT_CENTER = [43.6923, -79.43071];
-const DEFAULT_ZOOM = 12;
+const DESKTOP_DEFAULT_ZOOM = 12;
+const MOBILE_DEFAULT_ZOOM = 11; // Adjust this value to your preferred mobile zoom level
+
+function getDefaultZoom() {
+  return window.innerWidth <= 768 ? MOBILE_DEFAULT_ZOOM : DESKTOP_DEFAULT_ZOOM;
+}
+
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmdqwmsBGqKFd6BcAalcgXSxlwoJhFv8j-D9sPoqyBsKRSbwMTD5JXQBYYqmk1Qj2irHycVrzQC3ID/pub?gid=0&single=true&output=csv';
 
 // pins
@@ -74,7 +80,7 @@ const map = L.map('map', {
   zoomSnap: 0.25,
   zoomDelta: 0.25,
   wheelPxPerZoomLevel: 75
-}).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+}).setView(DEFAULT_CENTER, getDefaultZoom());
 
 // load Mapbox tiles onto Leaflet map
 if (accessToken && accessToken.trim() !== '') {
@@ -84,7 +90,7 @@ if (accessToken && accessToken.trim() !== '') {
       tileSize: 512,
       zoomOffset: -1,
       maxZoom: 16,
-      minZoom: 12,
+      minZoom: 11,
       attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }
   ).addTo(map);
@@ -380,8 +386,8 @@ document.getElementById('detailModal').addEventListener('click', (e) => {
 // reset button handler
 // ================================================================================================================================================================
 function resetMapView() {
-  // 1. Reset map zoom and position to default center
-  map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+  // 1. Reset map zoom and position to responsive default center & zoom
+  map.setView(DEFAULT_CENTER, getDefaultZoom());
 
   // 2. Clear search input field
   const searchInput = document.getElementById('searchInput');
