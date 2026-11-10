@@ -1,7 +1,7 @@
 const accessToken = MAPBOX_ACCESS_TOKEN;
 const MAPBOX_STYLE = 'kevinmao1999/cmvv2pgms008n01s2a9jgctrx';
 const DESKTOP_DEFAULT_CENTER = [43.6923, -79.43071];
-const MOBILE_DEFAULT_CENTER = [43.689221776841656, -79.42761670851968];
+const MOBILE_DEFAULT_CENTER = [43.68073383347655, -79.43301218739757];
 const DESKTOP_DEFAULT_ZOOM = 12;
 const MOBILE_DEFAULT_ZOOM = 10; // Adjust this value to your preferred mobile zoom level
 
