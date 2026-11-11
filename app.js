@@ -501,7 +501,6 @@ sidebarHeader.addEventListener('click', (e) => {
 if (isMobile()) {
   sidebar.classList.add('collapsed');
 }
-fetchSheetData();
 
 // Force Leaflet to recalculate dimensions once DOM and styles settle
 window.addEventListener('load', () => {
@@ -516,3 +515,9 @@ window.addEventListener('resize', () => {
     map.invalidateSize();
   }
 });
+
+document.getElementById('detailModal').addEventListener('touchmove', function(e) {
+  e.preventDefault();
+}, { passive: false });
+
+fetchSheetData();
