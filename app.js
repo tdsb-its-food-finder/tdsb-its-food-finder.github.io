@@ -373,6 +373,7 @@ function openDetailModal(place) {
     </div>
   `;
 
+  document.body.style.overflow = 'hidden';
   modal.classList.remove('hidden');
 }
 
