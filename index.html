@@ -22,19 +22,19 @@
 
 <body>
   <div class="app-container">
-    
     <!-- sidebar -->
     <aside class="sidebar">
+      <!-- sidebar header -->
       <header class="sidebar-header">
         <h1>TDSB ITS Food Finder</h1>
         <div>
-          <p style="margin-bottom: 3px;">This site is managed by Kevin Mao. My goal was to create a tool that would help us both decide where to go for lunch and also discover new local spots!</p>
-          <p style="margin-bottom: 3px;">Please pop me an email or message on Teams if you find any mistakes or have any recommendations to be made.</p>
-          <p>Also, feel free to join our <a style="color: white" href="https://teams.microsoft.com/l/chat/19%3A9199eb852bcd4938b22bd4ddf5a0d99d%40thread.v2/conversations?context=%7B%22contextType%22%3A%22chat%22%7D">MS Teams group chat</a> where we'll often share what we get for lunch!</p>
+          <p style="margin-bottom: 3px; line-height: 1.2;">This site is managed by Kevin Mao. My goal was to create a tool that would help us both decide where to go for lunch and also discover new local spots!</p>
+          <p style="margin-bottom: 3px; line-height: 1.2;">Please pop me an email or message on Teams if you find any mistakes or have any recommendations to be made.</p>
+          <p style="line-height: 1.2;">Also, feel free to join our <a style="color: white" href="https://teams.microsoft.com/l/chat/19%3A9199eb852bcd4938b22bd4ddf5a0d99d%40thread.v2/conversations?context=%7B%22contextType%22%3A%22chat%22%7D">MS Teams group chat</a> where we'll often share what we get for lunch!</p>
         </div>
       </header>
 
-      <!-- Add search container -->
+      <!-- searchbar -->
       <div class="search-container">
         <input
           type="text" 
@@ -44,20 +44,19 @@
         />
       </div>
 
-      <!-- section where visible restaurants will list -->
+      <!-- list of restaurants -->
       <div class="restaurant-list" id="restaurantList">
         <p class="placeholder-text">Loading locations...</p>
       </div>
     </aside>
 
     <!-- map container -->
-    <main id="map"></main>
-    
-    <!-- Floating Reset Button -->
-    <button id="resetMapBtn" class="reset-btn" title="Reset View & Search">
-      <i class="fa-solid fa-rotate-right"></i>
-    </button>
-
+    <main id="map">
+      <!-- reset button -->
+      <button id="resetMapBtn" class="reset-btn" title="Reset View & Search">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+    </main>
   </div>
 
   <!-- detail modal/drawer (hidden by default) -->
@@ -68,20 +67,9 @@
     </div>
   </div>
 
-  <!-- Leaflet JS -->
-  <script 
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
-    crossorigin="">
-  </script>
-
-  <!-- PapaParse JS for CSV parsing -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
-  <!-- Load configuration first -->
   <script src="config.js"></script>
-
-  <!-- Load main application script -->
   <script src="app.js"></script>
 </body>
 

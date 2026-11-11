@@ -1,3 +1,6 @@
+
+/******************** general ********************/
+/*********************************************************/
 * {
   box-sizing: border-box;
   margin: 0;
@@ -18,7 +21,8 @@ body, html {
   width: 100vw;
 }
 
-/* Sidebar Styling */
+/******************** sidebar desktop ********************/
+/*********************************************************/
 .sidebar {
   width: 350px;
   min-width: 300px;
@@ -32,26 +36,17 @@ body, html {
 }
 
 .sidebar-header {
-  padding: 20px;
+  padding: 12px;
   background-color: #43a745;
   color: #ffffff;
 }
-
 .sidebar-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   margin-bottom: 4px;
 }
-
 .sidebar-header p {
   font-size: 0.875rem;
   opacity: 0.8;
-}
-
-.restaurant-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 15px;
-  background-color: #ffffff;
 }
 
 .placeholder-text {
@@ -61,10 +56,15 @@ body, html {
   margin-top: 20px;
 }
 
-/* Restaurant List Item Styling */
+.restaurant-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background-color: #ffffff;
+}
 .restaurant-card {
-  position: relative; /* Container context for absolute positioning */
-  padding: 12px 30px 12px 15px; /* Added right padding (30px) to make room for the heart */
+  position: relative;
+  padding: 12px 30px 12px 15px;
   border-bottom: 1px solid #37832d71;
   border-radius: 6px;
   margin-bottom: 8px;
@@ -72,7 +72,6 @@ body, html {
   transition: background-color 0.2s ease;
 }
 
-/* Heart pinned to top right */
 .fav-badge {
   position: absolute;
   top: 10px;
@@ -84,26 +83,259 @@ body, html {
 .restaurant-card:hover {
   background-color: #fff8ef;
 }
-
 .restaurant-card h3 {
   font-size: 1.1rem;
   color: #333;
   margin-bottom: 4px;
 }
-
 .restaurant-card p {
   font-size: 0.85rem;
   color: #666;
 }
+.restaurant-card.highlighted {
+  background-color: #efffef !important;
+  border-left: 4px solid #43a745 !important;
+  transform: translateX(4px);
+}
 
-/* Map Container */
+/******************** sidebar mobile ********************/
+/*********************************************************/
+@media screen and (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60vh;
+    max-height: 85vh;
+    border-right: none;
+    border-top: none; /* Remove border-top line */
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    background-color: #43a745;
+    overflow: hidden
+  }
+
+  .sidebar-header {
+    padding: 4px 6px;
+    border-radius: 12px 12px 0 0;
+    position: relative;
+    cursor: pointer;
+    background-color: #43a745;
+    margin-bottom: -1px;
+    z-index: 2;
+  }
+  .sidebar-header::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 3px;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    margin: 0 auto 4px auto;
+  }
+  .sidebar-header h1 {
+    font-size: 1.1em;
+    text-align: center;
+    margin-bottom: 0;
+  }
+  .sidebar-header div {
+    display: none;
+  }
+  .sidebar-header * {
+    pointer-events: none;
+  }
+  .sidebar.collapsed {
+    transform: translateY(calc(100% - 100px));
+  }
+
+  .search-container {
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .restaurant-list {
+    background-color: #ffffff;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 10px;
+  }
+
+  .restaurant-card {
+    padding: 8px 26px 8px 10px;
+    margin-bottom: 6px;
+  }
+  .restaurant-card h3 {
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+  }
+  .restaurant-card p {
+    font-size: 0.78rem;
+  }
+
+  .fav-badge {
+    top: 6px;
+    right: 8px;
+    font-size: 1.1rem;
+  }
+
+  #map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .modal-content {
+    width: 80% !important;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .reset-btn {
+    top: 16px;
+    bottom: auto;
+    right: 12px;
+    z-index: 1002;
+    margin-right: -10px;
+  }
+}
+
+/******************** search ********************/
+/*********************************************************/
+.search-container {
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#searchInput:focus {
+  border-color: #43a745;
+  box-shadow: 0 0 0 3px rgba(67, 167, 69, 0.15);
+}
+
+/******************** map ********************/
+/*********************************************************/
 #map {
   flex: 1;
   height: 100%;
   width: 100%;
 }
 
-/* Detail Modal Styling */
+.leaflet-marker-icon {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+  
+  outline: none;
+  border: none;
+}
+
+.custom-tooltip {
+  font-family: 'Figtree', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #333333;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9), 
+               0 0 5px rgba(255, 255, 255, 0.9);
+  padding: 0;
+}
+
+.leaflet-tooltip-top.custom-tooltip::before,
+.leaflet-tooltip-bottom.custom-tooltip::before,
+.leaflet-tooltip-left.custom-tooltip::before,
+.leaflet-tooltip-right.custom-tooltip::before {
+  display: none !important;
+}
+
+.custom-tooltip::before {
+  border-top-color: rgba(0, 0, 0, 0.85);
+}
+
+/******************** reset button ********************/
+/*********************************************************/
+.reset-btn {
+  position: absolute;
+  bottom: 25px;
+  right: 25px;
+  z-index: 1000; /* Keeps it above the map tiles */
+  background-color: #ffffff;
+  color: #2c3e50;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.reset-btn:hover {
+  background-color: #f4f4f4;
+  transform: scale(1.05);
+}
+.reset-btn:active {
+  transform: scale(0.95);
+}
+
+.custom-map-control {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.custom-map-control a.reset-view-btn {
+  background-color: #ffffff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333333;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.2s ease, transform 0.15s ease, color 0.2s ease;
+}
+.custom-map-control a.reset-view-btn:hover {
+  background-color: #ffffff;
+  color: #43a745;
+  transform: scale(1.05);
+}
+.custom-map-control a.reset-view-btn:active {
+  transform: scale(0.95);
+}
+
+/******************** modal ********************/
+/*********************************************************/
 .modal {
   position: fixed;
   top: 0;
@@ -144,281 +376,4 @@ body, html {
 
 .close-btn:hover {
   color: #000;
-}
-
-/* Fix circular pin distortion and skewing during map zoom/pan */
-.leaflet-marker-icon {
-  /* Prevent browser 3D transform distortion */
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-
-  /* Force clean sub-pixel anti-aliasing and image scaling */
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: high-quality;
-  
-  /* Ensure transparent corners don't bleed or create edge borders */
-  outline: none;
-  border: none;
-}
-
-/* Sidebar hover highlight state */
-.restaurant-card.highlighted {
-  background-color: #efffef !important;
-  border-left: 4px solid #43a745 !important;
-  transform: translateX(4px);
-}
-
-/* Custom tooltip styling: plain text with drop shadow in Figtree */
-.custom-tooltip {
-  font-family: 'Figtree', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #333333;
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9), 
-               0 0 5px rgba(255, 255, 255, 0.9);
-  padding: 0;
-}
-
-/* Hide the Leaflet tooltip arrow pointer */
-.leaflet-tooltip-top.custom-tooltip::before,
-.leaflet-tooltip-bottom.custom-tooltip::before,
-.leaflet-tooltip-left.custom-tooltip::before,
-.leaflet-tooltip-right.custom-tooltip::before {
-  display: none !important;
-}
-
-.custom-tooltip::before {
-  border-top-color: rgba(0, 0, 0, 0.85); /* Matches tooltip arrow color */
-}
-
-/* Search Container & Input Styling */
-.search-container {
-  padding: 12px 15px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-#searchInput {
-  width: 100%;
-  padding: 10px 14px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-#searchInput:focus {
-  border-color: #43a745;
-  box-shadow: 0 0 0 3px rgba(67, 167, 69, 0.15);
-}
-
-/* Custom Circular Map Control */
-.custom-map-control {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.custom-map-control a.reset-view-btn {
-  background-color: #ffffff;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #333333;
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  transition: background-color 0.2s ease, transform 0.15s ease, color 0.2s ease;
-}
-
-.custom-map-control a.reset-view-btn:hover {
-  background-color: #ffffff;
-  color: #43a745;
-  transform: scale(1.05);
-}
-
-.custom-map-control a.reset-view-btn:active {
-  transform: scale(0.95);
-}
-
-.reset-btn {
-  position: absolute;
-  bottom: 25px;
-  right: 25px;
-  z-index: 1000; /* Keeps it above the map tiles */
-  background-color: #ffffff;
-  color: #2c3e50;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  font-size: 18px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.reset-btn:hover {
-  background-color: #f4f4f4;
-  transform: scale(1.05);
-}
-
-.reset-btn:active {
-  transform: scale(0.95);
-}
-
-/* ==========================================================================
-   Mobile Responsive Layout (Screens <= 768px)
-   ========================================================================== */
-@media screen and (max-width: 768px) {
-/* Reduced header padding and height */
-  .sidebar-header {
-    padding: 4px 6px; /* Reduced from 14px 20px */
-    border-radius: 12px 12px 0 0;
-    position: relative;
-    cursor: pointer;
-    background-color: #43a745;
-    margin-bottom: -1px;
-    z-index: 2;
-  }
-
-  /* Make drag handle bar slightly smaller and tighter */
-  .sidebar-header::before {
-    content: '';
-    display: block;
-    width: 32px; /* Reduced from 40px */
-    height: 3px; /* Reduced from 4px */
-    background-color: rgba(255, 255, 255, 0.6);
-    border-radius: 2px;
-    margin: 0 auto 4px auto; /* Reduced bottom margin from 8px */
-  }
-
-  .sidebar-header h1 {
-    font-size: 1.1em; /* Slightly smaller font size */
-    text-align: center;
-    margin-bottom: 0;
-  }
-
-  /* Update collapsed position calculation to match the smaller header height (~100px total vs 130px) */
-  .sidebar.collapsed {
-    transform: translateY(calc(100% - 100px));
-  }
-
-  /* Update floating reset button placement to account for the smaller collapsed tray */
-  .reset-btn {
-    bottom: 110px; /* Adjusted down from 140px */
-    right: 16px;
-    z-index: 1000;
-  }
-
-  /* Ensure clicks/taps on child elements register on the header container */
-  .sidebar-header * {
-    pointer-events: none;
-  }
-
-  /* 3. Keep rest of sidebar body white */
-  .search-container {
-    padding: 12px 15px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
-    position: relative;
-    z-index: 1;
-  }
-  
-  .restaurant-list {
-    background-color: #ffffff;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    padding: 10px;
-  }
-
-  .restaurant-card {
-    padding: 8px 26px 8px 10px; /* Compact internal padding */
-    margin-bottom: 6px;
-  }
-
-  .restaurant-card h3 {
-    font-size: 0.95rem; /* Smaller restaurant name */
-    margin-bottom: 2px;
-  }
-
-  .restaurant-card p {
-    font-size: 0.78rem; /* Smaller details/cuisine text */
-  }
-
-  /* Scale down subtext (location & distance) */
-  .restaurant-card p[style*="font-size: 0.8rem"] {
-    font-size: 0.72rem !important;
-  }
-
-  /* Adjust favorite heart size and position for compact cards */
-  .fav-badge {
-    top: 6px;
-    right: 8px;
-    font-size: 1.1rem;
-  }
-
-  /* Make map fill the entire container background */
-  #map {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-  }
-
-  /* 1. Prevent background bleed through rounded corner gaps */
-  .sidebar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 60vh;
-    max-height: 85vh;
-    border-right: none;
-    border-top: none; /* Remove border-top line */
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
-    z-index: 1001;
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    background-color: #43a745; /* Match header color to eliminate sub-pixel corner seam */
-    overflow: hidden; /* Clips internal scrolling content cleanly */
-  }
-
-  /* Drag handle indicator line */
-  .sidebar-header::before {
-    content: '';
-    display: block;
-    width: 40px;
-    height: 4px;
-    background-color: rgba(255, 255, 255, 0.6);
-    border-radius: 2px;
-    margin: 0 auto 8px auto;
-  }
-
-  /* Hide verbose text descriptions on small screens */
-  .sidebar-header div {
-    display: none;
-  }
-
-  /* Modal width adjustments */
-  .modal-content {
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 20px;
-  }
 }
