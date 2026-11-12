@@ -368,8 +368,6 @@ function openDetailModal(place) {
     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
       ${createLink(place['Google Maps'], 'Map')}
       ${createLink(place['Website'], 'Site')}
-    </div>
-    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
       ${createLink(place['Instagram'], 'Instagram')}
       ${createLink(place['Facebook'], 'Facebook')}
       ${createLink(place['TikTok'], 'TikTok')}
