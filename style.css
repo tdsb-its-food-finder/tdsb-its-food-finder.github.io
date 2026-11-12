@@ -400,7 +400,7 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 24px 20px 20px 20px;
+  padding: 16px;
 
   /* Firefox visible scrollbar */
   scrollbar-width: thin;
@@ -447,5 +447,6 @@ html, body {
   .modal-content {
     width: 90% !important;
     max-height: 75dvh;
+    padding: 4px;
   }
 }
