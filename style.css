@@ -196,11 +196,6 @@ html, body {
     z-index: 1;
   }
 
-  .modal-content {
-    width: 85% !important;
-    max-height: 60dvh;
-  }
-
   .reset-btn {
     top: 16px;
     bottom: auto;
@@ -446,4 +441,11 @@ html, body {
 
 .close-btn:hover {
   color: #000;
+}
+
+@media screen and (max-width: 768px) {
+  .modal-content {
+    width: 85% !important;
+    max-height: 60dvh;
+  }
 }
