@@ -386,7 +386,7 @@ html, body {
   max-width: 500px;
   
   /* Restrain height to viewport to prevent page-level scrollbars */
-  max-height: calc(100vh - 32px);
+  /* max-height: calc(100vh - 32px); */
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Hide outer modal overflow */
