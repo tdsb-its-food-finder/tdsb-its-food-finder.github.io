@@ -398,18 +398,39 @@ html, body {
 }
 
 /* Inner content scrolling */
+/* Inner content scrolling */
 #modalBody {
-  overflow-y: auto; /* Internal scroll only when content exceeds height */
-  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on iOS */
-  padding: 20px;
-  
-  /* Hide scrollbar visually while retaining touch scroll capability */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE / Edge */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 24px 20px 20px 20px;
+
+  /* Firefox visible scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
 }
 
+/* Force always-visible scrollbar on mobile & desktop WebKit/Blink browsers */
 #modalBody::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  width: 6px;
+  -webkit-appearance: none;
+}
+
+#modalBody::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 0 12px 12px 0;
+  margin: 8px 0;
+}
+
+#modalBody::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+#modalBody::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.45);
 }
 
 .close-btn {
