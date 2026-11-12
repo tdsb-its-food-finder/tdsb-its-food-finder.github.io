@@ -192,20 +192,23 @@ function renderMarkers(locations) {
       className: 'custom-tooltip'
     });
 
-    // on hover, swap marker icon and also highlight sidebar card (and unhighlight on unhover)
-    marker.on('mouseover', () => {
-      marker.setIcon(place.hoverIcon);
-      const targetCard = document.querySelector(`[data-card-id="${place.cardId}"]`);
-      if (targetCard) {
-        targetCard.classList.add('highlighted');
-        targetCard.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-      }
-    });
-    marker.on('mouseout', () => {
-      marker.setIcon(place.icon);
-      const targetCard = document.querySelector(`[data-card-id="${place.cardId}"]`);
-      if (targetCard) targetCard.classList.remove('highlighted');
-    });
+    // Only attach hover effects on devices that actually support hover (desktop)
+    if (window.matchMedia('(hover: hover)').matches) {
+      marker.on('mouseover', () => {
+        marker.setIcon(place.hoverIcon);
+        const targetCard = document.querySelector(`[data-card-id="${place.cardId}"]`);
+        if (targetCard) {
+          targetCard.classList.add('highlighted');
+          targetCard.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+        }
+      });
+
+      marker.on('mouseout', () => {
+        marker.setIcon(place.icon);
+        const targetCard = document.querySelector(`[data-card-id="${place.cardId}"]`);
+        if (targetCard) targetCard.classList.remove('highlighted');
+      });
+    }
 
     if (place.Type !== "ITS") {
       // onclick, open detail modal
