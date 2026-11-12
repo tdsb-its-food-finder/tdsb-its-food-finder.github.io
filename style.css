@@ -198,7 +198,7 @@ html, body {
 
   .modal-content {
     width: 85% !important;
-    max-height: 70vh;
+    max-height: 70dvh;
   }
 
   .reset-btn {
