@@ -104,6 +104,14 @@ if (accessToken && accessToken.trim() !== '') {
 let allRestaurants = [];
 const markersGroup = L.layerGroup().addTo(map);
 
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 // ================================================================================================================================================================
 // fetch and parse CSV data before initializing everything
 // ================================================================================================================================================================
@@ -157,6 +165,7 @@ function fetchSheetData() {
           hoverIcon: hoverIcon
         };
       });
+      shuffleArray(allRestaurants);
 
       // render initial state
       renderMarkers(allRestaurants);
