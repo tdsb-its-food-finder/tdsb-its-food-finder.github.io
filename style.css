@@ -400,7 +400,7 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 16px;
+  padding: 24px;
 
   /* Firefox visible scrollbar */
   scrollbar-width: thin;
